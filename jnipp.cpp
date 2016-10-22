@@ -65,11 +65,6 @@ namespace jni
 		Helper Functions
 	 */
 
-	static void handleJavaExceptions()
-	{
-		// TODO
-	}
-
 	static JNIEnv* env()
 	{
 		static thread_local ScopedEnv env;
@@ -88,6 +83,17 @@ namespace jni
 			throw NameResolutionException(name);
 
 		return ref;
+	}
+
+	static void handleJavaExceptions()
+	{
+		JNIEnv* env = jni::env();
+
+		if (env->ExceptionCheck() != JNI_FALSE)
+		{
+			env->ExceptionClear();
+			throw InvocationException();
+		}
 	}
 
 	/*
