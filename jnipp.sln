@@ -11,6 +11,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Files", "Solution 
 		README.md = README.md
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tests", "tests\tests.vcxproj", "{911DB449-3D76-4261-8FFD-9BA508ED1D5B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -27,6 +29,14 @@ Global
 		{A32D4B7D-7009-4C87-9DE8-D7DB659F5B58}.Release|x64.Build.0 = Release|x64
 		{A32D4B7D-7009-4C87-9DE8-D7DB659F5B58}.Release|x86.ActiveCfg = Release|Win32
 		{A32D4B7D-7009-4C87-9DE8-D7DB659F5B58}.Release|x86.Build.0 = Release|Win32
+		{911DB449-3D76-4261-8FFD-9BA508ED1D5B}.Debug|x64.ActiveCfg = Debug|x64
+		{911DB449-3D76-4261-8FFD-9BA508ED1D5B}.Debug|x64.Build.0 = Debug|x64
+		{911DB449-3D76-4261-8FFD-9BA508ED1D5B}.Debug|x86.ActiveCfg = Debug|Win32
+		{911DB449-3D76-4261-8FFD-9BA508ED1D5B}.Debug|x86.Build.0 = Debug|Win32
+		{911DB449-3D76-4261-8FFD-9BA508ED1D5B}.Release|x64.ActiveCfg = Release|x64
+		{911DB449-3D76-4261-8FFD-9BA508ED1D5B}.Release|x64.Build.0 = Release|x64
+		{911DB449-3D76-4261-8FFD-9BA508ED1D5B}.Release|x86.ActiveCfg = Release|Win32
+		{911DB449-3D76-4261-8FFD-9BA508ED1D5B}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
