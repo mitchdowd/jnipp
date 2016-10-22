@@ -102,6 +102,36 @@ namespace jni
 		}
 
 		/**
+			Calls the method on this Object and supplies the given arguments.
+			Note that the return type should be explicitly stated in the function
+			call.
+			\param method The method to call.
+			\param args Arguments to supply to the method.
+			\return The method's return value.
+		 */
+		template <class TReturn, class... TArgs>
+		TReturn call(method_t method, TArgs... args) {
+			value_t values[sizeof...(args)] = {};
+			return callMethod<TReturn>(method, internal::args(args...));
+		}
+
+		/**
+			Calls the method on this Object and supplies the given arguments.
+			Note that the return type should be explicitly stated in the function
+			call. The type signature of the method is calculated by the types of
+			the supplied arguments.
+			\param name The name of the method to call.
+			\param args Arguments to supply to the method.
+			\return The method's return value.
+		 */
+		template <class TReturn, class... TArgs>
+		TReturn call(const char* name, TArgs... args) {
+			String sig = "(" + internal::sig(args...) + ")" + internal::valueSig((TReturn*) nullptr);
+			method_t method = Class(getClass()).getMethod(name, sig.c_str());
+			return call<TReturn>(method, args...);
+		}
+
+		/**
 			Gets a field value from this Object. The field must belong to the
 			Object's class. Note that the field type should be explicitly stated
 			in the function call.
@@ -179,7 +209,7 @@ namespace jni
 		Class corresponds with `java.lang.Class`, and allows you to instantiate
 		Objects and get class members such as methods and fields.
 	 */
-	class Class final : public Object
+	class Class final : private Object
 	{
 	public:
 		/**
