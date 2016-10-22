@@ -3,8 +3,10 @@
   <ItemGroup>
     <ClInclude Include="jnipp.h" />
     <ClInclude Include="types.h" />
+    <ClInclude Include="internal.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="jnipp.cpp" />
+    <ClCompile Include="internal.cpp" />
   </ItemGroup>
 </Project>

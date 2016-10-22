@@ -2,7 +2,7 @@
 #define _JNIPP_H_ 1
 
 // Local Dependencies
-#include "types.h"
+#include "internal.h"
 
 namespace jni
 {
@@ -124,6 +124,20 @@ namespace jni
 		Object newInstance() const;
 
 		/**
+			Creates a new instance of this Java class and returns a reference to
+			it. The constructor signature is determined by the supplied parameters,
+			and the parameters are then passed to the constructor.
+			\param args Arguments to supply to the constructor.
+			\return The created instance.
+		 */
+		template <class... TArgs>
+		Object newInstance(TArgs... args) const {
+			internal::value_t values[sizeof...(args)] = {};
+			method_t constructor = getMethod("<init>", ("(" + internal::sig(args...) + ")V").c_str());
+			return newObject(constructor, internal::args(values, args...));
+		}
+
+		/**
 			Gets a handle to the field with the given name and type signature.
 			This handle can then be stored so that the field does not need to
 			be looked up by name again. It does not need to be deleted.
@@ -142,6 +156,10 @@ namespace jni
 			\return The method ID.
 		 */
 		method_t getMethod(const char* name, const char* signature) const;
+
+	private:
+		// Helper Functions
+		Object newObject(method_t constructor, internal::value_t* args) const;
 	};
 
 	/**

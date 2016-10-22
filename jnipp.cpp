@@ -242,6 +242,13 @@ namespace jni
 		return id;
 	}
 
+	Object Class::newObject(method_t constructor, internal::value_t* args) const
+	{
+		jobject ref = env()->NewObjectA(jclass(getHandle()), constructor, (jvalue*)args);
+		handleJavaExceptions();
+		return Object(ref, DeleteLocalInput);
+	}
+
 	/*
 		Class Implementation
 	 */
