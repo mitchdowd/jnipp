@@ -9,9 +9,7 @@ namespace jni
 	/**
 		Initialises the Java Native Interface with the given JNIEnv handle, which
 		gets passed into a native function which is called from Java. This only
-		needs to be done once per process - further calls are no-ops. Note that
-		this does _not_ start a new Java Virtual Machine, it simply attaches to
-		an existing one.
+		needs to be done once per process - further calls are no-ops.
 		\param env A JNI environment handle.
 	 */
 	void init(JNIEnv* env);
@@ -84,6 +82,12 @@ namespace jni
 		 */
 		bool isNull() const noexcept;
 
+		/**
+			Gets the underlying JNI jobject handle.
+			\return The JNI handle.
+		 */
+		jobject getHandle() const noexcept { return _handle; }
+
 	private:
 		// Instance Variables
 		jobject _handle;
@@ -111,12 +115,57 @@ namespace jni
 			\param scopeFlags Bitmask of Object::ScopeFlags.
 		 */
 		Class(jclass ref, int scopeFlags = 0);
+
+		/**
+			Gets a handle to the field with the given name and type signature.
+			This handle can then be stored so that the field does not need to
+			be looked up by name again. It does not need to be deleted.
+			\param name The name of the field.
+			\param signature The JNI type signature of the field.
+			\return The field ID.
+		 */
+		field_t getField(const char* name, const char* signature) const;
+
+		/**
+			Gets a handle to the method with the given name and signature.
+			This handle can then be stored so that the method does not need
+			to be looked up by name again. It does not need to be deleted.
+			\param name The name of the method.
+			\param signature The JNI method signature.
+			\return The method ID.
+		 */
+		method_t getMethod(const char* name, const char* signature) const;
+	};
+
+	/**
+		When the application's entry point is in C++ rather than in Java, it will
+		need to spin up its own instance of the Java Virtual Machine (JVM) before
+		it can initialize the Java Native Interface. Vm is used to create and 
+		destroy a running JVM instance.
+
+		It uses the RAII idiom, so when the destructor is called, the Vm is shut
+		down.
+
+		Note that currently only one instance is supported. Attempts to create
+		more will result in an InitializationException.
+	 */
+	class Vm final
+	{
+	public:
+		/**
+			Starts the Java Virtual Machine. 
+			\param path The path to the jvm.dll 
+		 */
+		Vm(const char* path);
+
+		/** Destroys the running instance of the JVM. */
+		~Vm();
 	};
 
 	/**
 		A Java method call threw an Exception.
 	 */
-	class InvokationException : public Exception
+	class InvocationException : public Exception
 	{
 	};
 

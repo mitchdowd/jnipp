@@ -1,6 +1,8 @@
 Java Native Interface for C++
 =============================
 
+	** Note: This library is only in early development and not yet ready for use! **
+
 ## Overview
 
 JNIPP is just a C++ wrapper for the standard Java Native Interface (JNI). It

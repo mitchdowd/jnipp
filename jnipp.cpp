@@ -1,5 +1,14 @@
+#ifdef _WIN32
+# include <windows.h>
+#else
+# error "Platform not supported"
+#endif
+
 // External Dependencies
 #include <jni.h>
+
+// Standard Dependencies
+#include <string>
 
 // Local Dependencies
 #include "jnipp.h"
@@ -7,7 +16,8 @@
 namespace jni
 {
 	// Static Variables
-	static JavaVM* javaVm = nullptr;
+	static JavaVM* javaVm  = nullptr;
+	static void*   library = nullptr;
 
 	/**
 		Maintains the lifecycle of a JNIEnv.
@@ -189,13 +199,93 @@ namespace jni
 		Class Implementation
 	 */
 
-
 	Class::Class(const char* name) : Object(findClass(name), DeleteLocalInput)
 	{
 	}
 
 	Class::Class(jclass ref, int scopeFlags) : Object(ref, scopeFlags)
 	{
+	}
+
+	field_t Class::getField(const char* name, const char* signature) const
+	{
+		jfieldID id = env()->GetFieldID(jclass(getHandle()), name, signature);
+
+		if (id == nullptr)
+			throw NameResolutionException(name);
+
+		return id;
+	}
+
+	method_t Class::getMethod(const char* name, const char* signature) const
+	{
+		jmethodID id = env()->GetMethodID(jclass(getHandle()), name, signature);
+
+		if (id == nullptr)
+			throw NameResolutionException(name);
+
+		return id;
+	}
+
+	/*
+		Class Implementation
+	 */
+
+	typedef jint (JNICALL *CreateVm_t)(JavaVM**, void**, void*);
+
+	Vm::Vm(const char* path)
+	{
+		if (javaVm != nullptr)
+			throw InitializationException("Java Virtual Machine already initialized");
+		if (path == nullptr)
+			throw InitializationException("Automatic path selection not yet implemented");
+
+		JNIEnv* env;
+		JavaVMInitArgs args = {};
+
+		args.version = JNI_VERSION_1_2;
+
+#ifdef _WIN32
+		
+		HMODULE lib = ::LoadLibraryA(path);
+
+		if (lib == NULL)
+			throw InitializationException("Could not load JVM library");
+
+		CreateVm_t JNI_CreateJavaVM = (CreateVm_t) ::GetProcAddress(lib, "JNI_CreateJavaVM");
+
+		if (JNI_CreateJavaVM == NULL)
+		{
+			::FreeLibrary(lib);
+			throw InitializationException("Invalid JVM library");
+		}
+
+		if (JNI_CreateJavaVM(&javaVm, (void**) &env, &args) != 0)
+		{
+			::FreeLibrary(lib);
+			throw InitializationException("Java Virtual Machine failed during creation");
+		}
+
+		// Save the loaded DLL for later.
+		library = lib;
+
+#else
+# error Platform not yet supported
+#endif // _WIN32
+	}
+
+	Vm::~Vm()
+	{
+		javaVm->DestroyJavaVM();
+		javaVm = nullptr;
+
+#ifdef _WIN32
+		::FreeLibrary(HMODULE(library));
+#else
+# error "Platform not supported"
+#endif // _WIN32
+
+		library = nullptr;
 	}
 }
 
