@@ -6,6 +6,9 @@
 
 namespace jni
 {
+	// Forward Declarations
+	JNIEnv* env();
+
 	namespace internal
 	{
 		// Base Type Signatures
@@ -27,6 +30,20 @@ namespace jni
 		template <> void valueArg(value_t* v, const float& a)		{ ((jvalue*) v)->f = a; }
 		template <> void valueArg(value_t* v, const double& a)		{ ((jvalue*) v)->d = a; }
 		template <> void valueArg(value_t* v, const jobject& a)		{ ((jvalue*) v)->l = a; }
+
+		/*
+			String Implementations
+		 */
+
+		template <> String valueSig(const String*)
+		{
+			return "Ljava/lang/String;";
+		}
+
+		template <> void valueArg(value_t* v, const String& a)
+		{
+			((jvalue*) v)->l = env()->NewStringUTF(a.c_str());
+		}
 	}
 }
 

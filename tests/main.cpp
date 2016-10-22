@@ -8,7 +8,7 @@ int main()
 	jni::Class Integer = jni::Class("java/lang/Integer");
 	jni::Object obj = Integer.newInstance(1337);
 
-	int i = obj.call<int>("intValue");
+	jni::String str = obj.call<jni::String>("toString");
 
 	return 0;
 }

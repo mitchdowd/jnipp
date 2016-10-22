@@ -65,7 +65,7 @@ namespace jni
 		Helper Functions
 	 */
 
-	static JNIEnv* env()
+	JNIEnv* env()
 	{
 		static thread_local ScopedEnv env;
 
@@ -94,6 +94,20 @@ namespace jni
 			env->ExceptionClear();
 			throw InvocationException();
 		}
+	}
+
+	static String toString(jobject handle, bool deleteLocal = true)
+	{
+		JNIEnv* env = jni::env();
+
+		const char* chars = env->GetStringUTFChars(jstring(handle), NULL);
+		String result(chars, env->GetStringUTFLength(jstring(handle)));
+		env->ReleaseStringUTFChars(jstring(handle), chars);
+
+		if (deleteLocal)
+			env->DeleteLocalRef(handle);
+
+		return result;
 	}
 
 	/*
@@ -323,6 +337,27 @@ namespace jni
 	template <> void Object::set(field_t field, const double& value)
 	{
 		env()->SetDoubleField(_handle, field, value);
+	}
+
+	template <>	String Object::callMethod(method_t method, internal::value_t* args)
+	{
+		auto result = env()->CallObjectMethodA(_handle, method, (jvalue*) args);
+		handleJavaExceptions();
+		return toString(result);
+	}
+
+	template <> String Object::get(field_t field) const
+	{
+		return toString(env()->GetObjectField(_handle, field));
+	}
+
+	template <> void Object::set(field_t field, const String& value)
+	{
+		JNIEnv* env = jni::env();
+
+		jobject handle = env->NewStringUTF(value.c_str());
+		env->SetObjectField(_handle, field, handle);
+		env->DeleteLocalRef(handle);
 	}
 
 	jclass Object::getClass() const
