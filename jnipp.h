@@ -77,10 +77,87 @@ namespace jni
 		Object& operator=(Object&& other);
 
 		/**
+			Calls the given method on this Object. The method should have no
+			parameters. Note that the return type should be explicitly stated
+			in the function call.
+			\param method A method handle which applies to this Object.
+			\return The method's return value.
+		 */
+		template <class TReturn>
+		TReturn call(method_t method) {
+			return callMethod<TReturn>(method, nullptr);
+		}
+
+		/**
+			Calls the method on this Object with the given name, and no arguments.
+			Note that the return type should be explicitly stated in the function
+			call.
+			\param name The name of the method to call.
+			\return The method's return value.
+		 */
+		template <class TReturn>
+		TReturn call(const char* name) {
+			method_t method = Class(getClass()).getMethod(name, ("()" + internal::valueSig((TReturn*) nullptr)).c_str());
+			return call<TReturn>(method);
+		}
+
+		/**
+			Gets a field value from this Object. The field must belong to the
+			Object's class. Note that the field type should be explicitly stated
+			in the function call.
+			\param field Identifier for the field to retrieve.
+			\return The field's value.
+		 */
+		template <class TType>
+		TType get(field_t field) const;
+
+		/**
+			Gets a field value from this Object. The field must belong to the
+			Object's class. Note that the field type should be explicitly stated
+			in the function call.
+			\param name The name of the field to retrieve.
+			\return The field's value.
+		 */
+		template <class TType>
+		TType get(const char* name) const {
+			field_t field = Class(getClass()).getField(name, internal::valueSig((TReturn*) nullptr).c_str());
+			return get<TReturn>(field);
+		}
+
+		/**
+			Sets a field's value on this Object. The field must belong to the
+			Object's class, and the parameter's type should correspond to the
+			type of the field.
+			\param field The field to set the value to.
+			\param value The value to set.
+		 */
+		template <class TType>
+		void set(field_t field, const TType& value);
+
+		/**
+			Sets a field's value on this Object. The field must belong to the
+			Object's class, and the parameter's type should correspond to the
+			type of the field.
+			\param name The name of the field to set the value to.
+			\param value The value to set.
+		 */
+		template <class TType>
+		void set(const char* name, const TType& value) {
+			field_t field = Class(getClass()).getField(name, internal::valueSig((TType*) nullptr).c_str());
+			set(field, value);
+		}
+
+		/**
 			Tells whether this Object is currently a `null` pointer.
 			\return `true` if `null`, `false` if it references an object.
 		 */
 		bool isNull() const noexcept;
+
+		/**
+			Gets a handle for this Object's class.
+			\return The Object's Class's handle.
+		 */
+		jclass getClass() const;
 
 		/**
 			Gets the underlying JNI jobject handle.
@@ -89,6 +166,9 @@ namespace jni
 		jobject getHandle() const noexcept { return _handle; }
 
 	private:
+		// Helper Functions
+		template <class TType> TType callMethod(method_t method, internal::value_t* values);
+
 		// Instance Variables
 		jobject _handle;
 		mutable jclass _class;

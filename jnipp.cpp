@@ -200,6 +200,139 @@ namespace jni
 		return _handle == NULL;
 	}
 
+	template <>	bool Object::callMethod(method_t method, internal::value_t* args)
+	{
+		auto result = env()->CallBooleanMethodA(_handle, method, (jvalue*) args);
+		handleJavaExceptions();
+		return result != 0;
+	}
+
+	template <> bool Object::get(field_t field) const
+	{
+		return env()->GetBooleanField(_handle, field) != 0;
+	}
+
+	template <> void Object::set(field_t field, const bool& value)
+	{
+		env()->SetBooleanField(_handle, field, value);
+	}
+
+	template <>	wchar_t Object::callMethod(method_t method, internal::value_t* args)
+	{
+		auto result = env()->CallCharMethodA(_handle, method, (jvalue*) args);
+		handleJavaExceptions();
+		return result;
+	}
+
+	template <> wchar_t Object::get(field_t field) const
+	{
+		return env()->GetCharField(_handle, field);
+	}
+
+	template <> void Object::set(field_t field, const wchar_t& value)
+	{
+		env()->SetCharField(_handle, field, value);
+	}
+
+	template <>	short Object::callMethod(method_t method, internal::value_t* args)
+	{
+		auto result = env()->CallShortMethodA(_handle, method, (jvalue*) args);
+		handleJavaExceptions();
+		return result;
+	}
+
+	template <> short Object::get(field_t field) const
+	{
+		return env()->GetShortField(_handle, field);
+	}
+
+	template <> void Object::set(field_t field, const short& value)
+	{
+		env()->SetShortField(_handle, field, value);
+	}
+
+	template <>	int Object::callMethod(method_t method, internal::value_t* args)
+	{
+		auto result = env()->CallIntMethodA(_handle, method, (jvalue*) args);
+		handleJavaExceptions();
+		return result;
+	}
+
+	template <> int Object::get(field_t field) const
+	{
+		return env()->GetIntField(_handle, field);
+	}
+
+	template <> void Object::set(field_t field, const int& value)
+	{
+		env()->SetIntField(_handle, field, value);
+	}
+
+	template <>	long long Object::callMethod(method_t method, internal::value_t* args)
+	{
+		auto result = env()->CallLongMethodA(_handle, method, (jvalue*) args);
+		handleJavaExceptions();
+		return result;
+	}
+
+	template <> long long Object::get(field_t field) const
+	{
+		return env()->GetLongField(_handle, field);
+	}
+
+	template <> void Object::set(field_t field, const long long& value)
+	{
+		env()->SetLongField(_handle, field, value);
+	}
+
+	template <>	float Object::callMethod(method_t method, internal::value_t* args)
+	{
+		auto result = env()->CallFloatMethodA(_handle, method, (jvalue*) args);
+		handleJavaExceptions();
+		return result;
+	}
+
+	template <> float Object::get(field_t field) const
+	{
+		return env()->GetFloatField(_handle, field);
+	}
+
+	template <> void Object::set(field_t field, const float& value)
+	{
+		env()->SetFloatField(_handle, field, value);
+	}
+
+	template <>	double Object::callMethod(method_t method, internal::value_t* args)
+	{
+		auto result = env()->CallDoubleMethodA(_handle, method, (jvalue*) args);
+		handleJavaExceptions();
+		return result;
+	}
+
+	template <> double Object::get(field_t field) const
+	{
+		return env()->GetDoubleField(_handle, field);
+	}
+
+	template <> void Object::set(field_t field, const double& value)
+	{
+		env()->SetDoubleField(_handle, field, value);
+	}
+
+	jclass Object::getClass() const
+	{
+		if (_class == NULL)
+		{
+			JNIEnv* env = jni::env();
+
+			jclass classRef = env->GetObjectClass(_handle);
+			_class = jclass(env->NewGlobalRef(classRef));
+			env->DeleteLocalRef(classRef);
+		}
+
+		return _class;
+	}
+
 	/*
 		Class Implementation
 	 */
