@@ -65,6 +65,11 @@ namespace jni
 		Helper Functions
 	 */
 
+	static void handleJavaExceptions()
+	{
+		// TODO
+	}
+
 	static JNIEnv* env()
 	{
 		static thread_local ScopedEnv env;
@@ -205,6 +210,16 @@ namespace jni
 
 	Class::Class(jclass ref, int scopeFlags) : Object(ref, scopeFlags)
 	{
+	}
+
+	Object Class::newInstance() const
+	{
+		method_t constructor = getMethod("<init>", "()V");
+		jobject obj = env()->NewObject(jclass(getHandle()), constructor);
+
+		handleJavaExceptions();
+
+		return Object(obj, Object::DeleteLocalInput);
 	}
 
 	field_t Class::getField(const char* name, const char* signature) const

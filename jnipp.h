@@ -117,6 +117,13 @@ namespace jni
 		Class(jclass ref, int scopeFlags = 0);
 
 		/**
+			Creates a new instance of this Java class and returns a reference to
+			it. The item's parameterless constructor is called.
+			\return The created instance.
+		 */
+		Object newInstance() const;
+
+		/**
 			Gets a handle to the field with the given name and type signature.
 			This handle can then be stored so that the field does not need to
 			be looked up by name again. It does not need to be deleted.
