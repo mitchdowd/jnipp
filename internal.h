@@ -36,14 +36,41 @@ namespace jni
 		template <class TArg>
 		void valueArg(value_t* value, const TArg& arg);
 
-		inline value_t* args(value_t* values) { return values; }
+		inline void args(value_t*) {}
 
 		template <class TArg, class... TArgs>
-		value_t* args(value_t* values, const TArg& arg, TArgs... args) {
+		void args(value_t* values, const TArg& arg, TArgs... args) {
 			valueArg(values, arg);
 			args(values + 1, args...);
-			return values;
 		}
+
+		template <class TArg> void cleanupArg(value_t* value) {}
+		template <> void cleanupArg<String>(value_t* value);
+		template <> void cleanupArg<const char*>(value_t* value);
+
+		template <class TArg = void, class... TArgs>
+		void cleanupArgs(value_t* values) {
+			cleanupArg<TArg>(values);
+			cleanupArgs<TArgs...>(values + 1);
+		}
+
+		template <> inline void cleanupArgs<void>(value_t* values) {}
+
+		template <class... TArgs>
+		class ArgTransform
+		{
+		public:
+			ArgTransform(TArgs... args) {
+				std::memset(this, 0, sizeof(ArgTransform<TArgs...>));
+				args(values, args...);
+			}
+
+			~ArgTransform() {
+				cleanupArgs<TArgs...>(values);
+			}
+
+			value_t values[sizeof...(TArgs)];
+		};
 	}
 }
 

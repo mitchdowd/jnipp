@@ -9,9 +9,9 @@ int main()
 
 	int i = Integer.get<int>("SIZE");
 
-	jni::Object obj = Integer.newInstance(1337);
+	jni::Object obj = Integer.newInstance("100");
 
-	jni::String str = obj.call<jni::String>("toString");
+	std::string str = obj.call<std::string>("toString");
 
 	return 0;
 }

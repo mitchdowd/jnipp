@@ -109,8 +109,8 @@ namespace jni
 		 */
 		template <class TReturn, class... TArgs>
 		TReturn call(method_t method, TArgs... args) {
-			value_t values[sizeof...(args)] = {};
-			return callMethod<TReturn>(method, internal::args(args...));
+			internal::ArgTransform<TArgs...> transform(args...);
+			return callMethod<TReturn>(method, transform.values);
 		}
 
 		/**
@@ -240,9 +240,9 @@ namespace jni
 		 */
 		template <class... TArgs>
 		Object newInstance(TArgs... args) const {
-			internal::value_t values[sizeof...(args)] = {};
+			internal::ArgTransform<TArgs...> transform(args...);
 			method_t constructor = getMethod("<init>", ("(" + internal::sig(args...) + ")V").c_str());
-			return newObject(constructor, internal::args(values, args...));
+			return newObject(constructor, transform.values);
 		}
 
 		/**
@@ -318,8 +318,8 @@ namespace jni
 		 */
 		template <class TReturn, class... TArgs>
 		TReturn call(method_t method, TArgs... args) {
-			value_t values[sizeof...(args)] = {};
-			return callStaticMethod<TReturn>(method, internal::args(args...));
+			internal::ArgTransform<TArgs...> transform(args...);
+			return callStaticMethod<TReturn>(method, transform.values);
 		}
 
 		/**

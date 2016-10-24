@@ -35,14 +35,34 @@ namespace jni
 			String Implementations
 		 */
 
+		template <> String valueSig(const char* const*)
+		{
+			return "Ljava/lang/String;";
+		}
+
 		template <> String valueSig(const String*)
 		{
 			return "Ljava/lang/String;";
 		}
 
+		template <> void cleanupArg<String>(value_t* v)
+		{
+			env()->DeleteLocalRef(((jvalue*) v)->l);
+		}
+
 		template <> void valueArg(value_t* v, const String& a)
 		{
 			((jvalue*) v)->l = env()->NewStringUTF(a.c_str());
+		}
+
+		template <> void valueArg(value_t* v, const char* const& a)
+		{
+			((jvalue*) v)->l = env()->NewStringUTF(a);
+		}
+
+		template <> void cleanupArg<const char*>(value_t* v)
+		{
+			env()->DeleteLocalRef(((jvalue*) v)->l);
 		}
 	}
 }
