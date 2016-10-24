@@ -8,6 +8,7 @@
 #include <jni.h>
 
 // Standard Dependencies
+#include <atomic>
 #include <string>
 
 // Local Dependencies
@@ -16,7 +17,7 @@
 namespace jni
 {
 	// Static Variables
-	static JavaVM* javaVm  = nullptr;
+	static std::atomic<JavaVM*> javaVm = nullptr;
 	static void*   library = nullptr;
 
 	/**
@@ -116,11 +117,16 @@ namespace jni
 
 	void init(JNIEnv* env)
 	{
-		if (javaVm != nullptr)
-			return;
+		if (javaVm.load() == nullptr)
+		{
+			JavaVM* expected = nullptr;
+			JavaVM* vm = nullptr;
 
-		if (env->GetJavaVM(&javaVm) != 0)
-			throw InitializationException("Could not acquire Java VM");
+			if (env->GetJavaVM(&vm) != 0)
+				throw InitializationException("Could not acquire Java VM");
+
+			javaVm.compare_exchange_strong(expected, vm);
+		}
 	}
 
 	/*
@@ -591,11 +597,13 @@ namespace jni
 
 	Vm::Vm(const char* path)
 	{
-		if (javaVm != nullptr)
+		if (javaVm.load() != nullptr)
 			throw InitializationException("Java Virtual Machine already initialized");
 		if (path == nullptr)
 			throw InitializationException("Automatic path selection not yet implemented");
 
+		JavaVM* vm;
+		JavaVM* expected = nullptr;
 		JNIEnv* env;
 		JavaVMInitArgs args = {};
 
@@ -616,14 +624,24 @@ namespace jni
 			throw InitializationException("Invalid JVM library");
 		}
 
-		if (JNI_CreateJavaVM(&javaVm, (void**) &env, &args) != 0)
+		if (JNI_CreateJavaVM(&vm, (void**) &env, &args) != 0)
 		{
 			::FreeLibrary(lib);
 			throw InitializationException("Java Virtual Machine failed during creation");
 		}
 
-		// Save the loaded DLL for later.
-		library = lib;
+		if (javaVm.compare_exchange_strong(expected, vm))
+		{
+			// Save the loaded DLL for later.
+			library = lib;
+		}
+		else
+		{
+			// We had a race condition... and lost.
+			::FreeLibrary(lib);
+			vm->DestroyJavaVM();
+			throw InitializationException("Java Virtual Machine already initialized");
+		}
 
 #else
 # error Platform not yet supported
@@ -632,7 +650,8 @@ namespace jni
 
 	Vm::~Vm()
 	{
-		javaVm->DestroyJavaVM();
+		// Concurrency issues are all sorted in constructor.
+		javaVm.load()->DestroyJavaVM();
 		javaVm = nullptr;
 
 #ifdef _WIN32
