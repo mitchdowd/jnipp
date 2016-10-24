@@ -84,9 +84,7 @@ namespace jni
 			\return The method's return value.
 		 */
 		template <class TReturn>
-		TReturn call(method_t method) {
-			return callMethod<TReturn>(method, nullptr);
-		}
+		TReturn call(method_t method) { return callMethod<TReturn>(method, nullptr); }
 
 		/**
 			Calls the method on this Object with the given name, and no arguments.
@@ -150,8 +148,8 @@ namespace jni
 		 */
 		template <class TType>
 		TType get(const char* name) const {
-			field_t field = Class(getClass()).getField(name, internal::valueSig((TReturn*) nullptr).c_str());
-			return get<TReturn>(field);
+			field_t field = Class(getClass()).getField(name, internal::valueSig((TType*) nullptr).c_str());
+			return get<TType>(field);
 		}
 
 		/**
@@ -258,6 +256,16 @@ namespace jni
 		field_t getField(const char* name, const char* signature) const;
 
 		/**
+			Gets a handle to the static field with the given name and type signature.
+			This handle can then be stored so that the field does not need to
+			be looked up by name again. It does not need to be deleted.
+			\param name The name of the field.
+			\param signature The JNI type signature of the field.
+			\return The field ID.
+		 */
+		field_t getStaticField(const char* name, const char* signature) const;
+
+		/**
 			Gets a handle to the method with the given name and signature.
 			This handle can then be stored so that the method does not need
 			to be looked up by name again. It does not need to be deleted.
@@ -267,8 +275,114 @@ namespace jni
 		 */
 		method_t getMethod(const char* name, const char* signature) const;
 
+		/**
+			Gets a handle to the static method with the given name and signature.
+			This handle can then be stored so that the method does not need
+			to be looked up by name again. It does not need to be deleted.
+			\param name The name of the method.
+			\param signature The JNI method signature.
+			\return The method ID.
+		 */
+		method_t getStaticMethod(const char* name, const char* signature) const;
+
+		/**
+			Calls a static method on this Class. The method should have no
+			parameters. Note that the return type should be explicitly stated
+			in the function call.
+			\param method A method handle which applies to this Object.
+			\return The method's return value.
+		 */
+		template <class TReturn>
+		TReturn call(method_t method) { return callStaticMethod<TReturn>(method, nullptr); }
+
+		/**
+			Calls a static method on this Class with the given name, and no arguments.
+			Note that the return type should be explicitly stated in the function
+			call.
+			\param name The name of the method to call.
+			\return The method's return value.
+		 */
+		template <class TReturn>
+		TReturn call(const char* name) {
+			method_t method = getMethod(name, ("()" + internal::valueSig((TReturn*) nullptr)).c_str());
+			return call<TReturn>(method);
+		}
+
+		/**
+			Calls a static method on this Class and supplies the given arguments.
+			Note that the return type should be explicitly stated in the function
+			call.
+			\param method The method to call.
+			\param args Arguments to supply to the method.
+			\return The method's return value.
+		 */
+		template <class TReturn, class... TArgs>
+		TReturn call(method_t method, TArgs... args) {
+			value_t values[sizeof...(args)] = {};
+			return callStaticMethod<TReturn>(method, internal::args(args...));
+		}
+
+		/**
+			Calls a static method on this Class and supplies the given arguments.
+			Note that the return type should be explicitly stated in the function
+			call. The type signature of the method is calculated by the types of
+			the supplied arguments.
+			\param name The name of the method to call.
+			\param args Arguments to supply to the method.
+			\return The method's return value.
+		 */
+		template <class TReturn, class... TArgs>
+		TReturn call(const char* name, TArgs... args) {
+			String sig = "(" + internal::sig(args...) + ")" + internal::valueSig((TReturn*) nullptr);
+			method_t method = getStaticMethod(name, sig.c_str());
+			return call<TReturn>(method, args...);
+		}
+
+		/**
+			Gets a static field value from this Class. Note that the field type
+			should be explicitly stated in the function call.
+			\param field Identifier for the field to retrieve.
+			\return The field's value.
+		 */
+		template <class TType>
+		TType get(field_t field) const;
+
+		/**
+			Gets a static field value from this Class. Note that the field type
+			should be explicitly stated in the function call.
+			\param name The name of the field to retrieve.
+			\return The field's value.
+		 */
+		template <class TType>
+		TType get(const char* name) const {
+			field_t field = getStaticField(name, internal::valueSig((TType*) nullptr).c_str());
+			return get<TType>(field);
+		}
+
+		/**
+			Sets a static field's value on this Class. The parameter's type should
+			correspond to the type of the field.
+			\param field The field to set the value to.
+			\param value The value to set.
+		 */
+		template <class TType>
+		void set(field_t field, const TType& value);
+
+		/**
+			Sets a static field's value on this Class. The parameter's type
+			should correspond to the type of the field.
+			\param name The name of the field to set the value to.
+			\param value The value to set.
+		 */
+		template <class TType>
+		void set(const char* name, const TType& value) {
+			field_t field = getStaticField(name, internal::valueSig((TType*) nullptr).c_str());
+			set(field, value);
+		}
+
 	private:
 		// Helper Functions
+		template <class TType> TType callStaticMethod(method_t method, internal::value_t* values);
 		Object newObject(method_t constructor, internal::value_t* args) const;
 	};
 

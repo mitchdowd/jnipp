@@ -406,6 +406,16 @@ namespace jni
 		return id;
 	}
 
+	field_t Class::getStaticField(const char* name, const char* signature) const
+	{
+		jfieldID id = env()->GetStaticFieldID(jclass(getHandle()), name, signature);
+
+		if (id == nullptr)
+			throw NameResolutionException(name);
+
+		return id;
+	}
+
 	method_t Class::getMethod(const char* name, const char* signature) const
 	{
 		jmethodID id = env()->GetMethodID(jclass(getHandle()), name, signature);
@@ -414,6 +424,156 @@ namespace jni
 			throw NameResolutionException(name);
 
 		return id;
+	}
+
+	method_t Class::getStaticMethod(const char* name, const char* signature) const
+	{
+		jmethodID id = env()->GetStaticMethodID(jclass(getHandle()), name, signature);
+
+		if (id == nullptr)
+			throw NameResolutionException(name);
+
+		return id;
+	}
+
+	template <>	bool Class::callStaticMethod(method_t method, internal::value_t* args)
+	{
+		auto result = env()->CallStaticBooleanMethodA(jclass(getHandle()), method, (jvalue*) args);
+		handleJavaExceptions();
+		return result != 0;
+	}
+
+	template <> bool Class::get(field_t field) const
+	{
+		return env()->GetStaticBooleanField(jclass(getHandle()), field) != 0;
+	}
+
+	template <> void Class::set(field_t field, const bool& value)
+	{
+		env()->SetStaticBooleanField(jclass(getHandle()), field, value);
+	}
+
+	template <>	wchar_t Class::callStaticMethod(method_t method, internal::value_t* args)
+	{
+		auto result = env()->CallStaticCharMethodA(jclass(getHandle()), method, (jvalue*) args);
+		handleJavaExceptions();
+		return result;
+	}
+
+	template <> wchar_t Class::get(field_t field) const
+	{
+		return env()->GetStaticCharField(jclass(getHandle()), field);
+	}
+
+	template <> void Class::set(field_t field, const wchar_t& value)
+	{
+		env()->SetStaticCharField(jclass(getHandle()), field, value);
+	}
+
+	template <>	short Class::callStaticMethod(method_t method, internal::value_t* args)
+	{
+		auto result = env()->CallStaticShortMethodA(jclass(getHandle()), method, (jvalue*) args);
+		handleJavaExceptions();
+		return result;
+	}
+
+	template <> short Class::get(field_t field) const
+	{
+		return env()->GetStaticShortField(jclass(getHandle()), field);
+	}
+
+	template <> void Class::set(field_t field, const short& value)
+	{
+		env()->SetStaticShortField(jclass(getHandle()), field, value);
+	}
+
+	template <>	int Class::callStaticMethod(method_t method, internal::value_t* args)
+	{
+		auto result = env()->CallStaticIntMethodA(jclass(getHandle()), method, (jvalue*) args);
+		handleJavaExceptions();
+		return result;
+	}
+
+	template <> int Class::get(field_t field) const
+	{
+		return env()->GetStaticIntField(jclass(getHandle()), field);
+	}
+
+	template <> void Class::set(field_t field, const int& value)
+	{
+		env()->SetStaticIntField(jclass(getHandle()), field, value);
+	}
+
+	template <>	long long Class::callStaticMethod(method_t method, internal::value_t* args)
+	{
+		auto result = env()->CallStaticLongMethodA(jclass(getHandle()), method, (jvalue*) args);
+		handleJavaExceptions();
+		return result;
+	}
+
+	template <> long long Class::get(field_t field) const
+	{
+		return env()->GetStaticLongField(jclass(getHandle()), field);
+	}
+
+	template <> void Class::set(field_t field, const long long& value)
+	{
+		env()->SetStaticLongField(jclass(getHandle()), field, value);
+	}
+
+	template <>	float Class::callStaticMethod(method_t method, internal::value_t* args)
+	{
+		auto result = env()->CallStaticFloatMethodA(jclass(getHandle()), method, (jvalue*) args);
+		handleJavaExceptions();
+		return result;
+	}
+
+	template <> float Class::get(field_t field) const
+	{
+		return env()->GetStaticFloatField(jclass(getHandle()), field);
+	}
+
+	template <> void Class::set(field_t field, const float& value)
+	{
+		env()->SetStaticFloatField(jclass(getHandle()), field, value);
+	}
+
+	template <>	double Class::callStaticMethod(method_t method, internal::value_t* args)
+	{
+		auto result = env()->CallStaticDoubleMethodA(jclass(getHandle()), method, (jvalue*) args);
+		handleJavaExceptions();
+		return result;
+	}
+
+	template <> double Class::get(field_t field) const
+	{
+		return env()->GetStaticDoubleField(jclass(getHandle()), field);
+	}
+
+	template <> void Class::set(field_t field, const double& value)
+	{
+		env()->SetStaticDoubleField(jclass(getHandle()), field, value);
+	}
+
+	template <>	String Class::callStaticMethod(method_t method, internal::value_t* args)
+	{
+		auto result = env()->CallStaticObjectMethodA(jclass(getHandle()), method, (jvalue*) args);
+		handleJavaExceptions();
+		return toString(result);
+	}
+
+	template <> String Class::get(field_t field) const
+	{
+		return toString(env()->GetStaticObjectField(jclass(getHandle()), field));
+	}
+
+	template <> void Class::set(field_t field, const String& value)
+	{
+		JNIEnv* env = jni::env();
+
+		jobject handle = env->NewStringUTF(value.c_str());
+		env->SetStaticObjectField(jclass(getHandle()), field, handle);
+		env->DeleteLocalRef(handle);
 	}
 
 	Object Class::newObject(method_t constructor, internal::value_t* args) const
