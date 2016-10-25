@@ -23,6 +23,7 @@ TEST(VM_notAllowedMultipleVms)
 {
 	try
 	{
+		jni::Vm firstVm;
 		jni::Vm secondVm;	// Throws an exception.
 	}
 	catch (jni::InitializationException&)
