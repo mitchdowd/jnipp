@@ -1,7 +1,7 @@
 Java Native Interface for C++
 =============================
 
-	** Note: This library is only in early development and not yet ready for use! **
+	Note: This library is only in early development and not yet ready for use!
 
 ## Overview
 
@@ -14,7 +14,90 @@ and C++ code.
 To compile you will need:
  - A C++11 compatible compiler
  - An installation of the Java Development Kit (JDK)
+ - The `JAVA_HOME` environment variable, directed to your JDK installation.
 
-To compile in Visual Studio, you will need your `JAVA_HOME` environment variable
-correctly set to the JDK installation directory.
+## Usage
 
+	For comprehensive examples on how to use *jnipp*, see the `tests` project
+	in the project source code.
+
+There are two situations where the Java Native Interface would be needed.
+ - A Java application calling C/C++ functions; or
+ - A C/C++ application calling Java methods
+
+### Calling Java from C++
+
+The following is an example of calling Java from C++.
+
+```C++
+#include <jnipp.h>
+
+int main()
+{
+	// An instance of the Java VM needs to be created.
+	jni::Vm vm;
+	
+	// Create an instance of java.lang.Integer
+	jni::Class Integer = jni::Class("java/lang/Integer");
+	jni::Object i = Integer.newInstance("1000");
+	
+	// Call the `toString` method on that integer
+	std::string str = i.call<std::string>("toString");
+	
+	// The Java VM is automatically destroyed when it goes out of scope.
+	return 0;
+}
+```
+
+### Calling C++ from Java
+
+Consider a basic Java program:
+
+```Java
+package com.example;
+
+class Demo {
+	public int value;
+
+	public static void main(String[] args) {
+		Demo demo = new Demo();
+		demo.value = 1000;
+		demo.run();
+	}
+	
+	public native void run();
+}
+```
+A matching C++ library which uses *jnipp* could look like:
+
+```C++
+#include <jnipp.h>
+#include <iostream>
+
+/*
+	The signature here is defind by the JNI standard, so must be adhered to.
+	Although, to prevent pollution of the global namespace, the JNIEnv and
+	jobject types defind by the standard JNI have been placed into the
+	jni namespace.
+ */
+extern "C" void Java_com_example_Demo_run(jni::JNIEnv* env, jni::jobject obj)
+{
+	// jnipp only needs initialising once, but it doesn't hurt to do it again.
+	jni::init(env);
+	
+	// Capture the supplied object.
+	jni::Object demo(obj);
+	
+	// Print the contents of the `value` field to stdout.
+	std::cout << demo.get<int>("value") << std::endl;
+}
+```
+
+## Configuration
+
+By default, *jnipp* uses std::exception and std::string to represent exception
+and string classes. If you wish, you can update the type definition in `types.h`
+to refer to your own exception and string classes if you so choose.
+
+Bear in mind that they must behave like the standard library equivalents to
+a certain degree (i.e. accepting `const char*` constructors, etc).
