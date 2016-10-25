@@ -117,6 +117,14 @@ TEST(Object_defaultConstructor_isNull)
 	ASSERT(o.isNull());
 }
 
+TEST(Object_copyConstructorIsSameObject)
+{
+	jni::Object a = jni::Class("java/lang/String").newInstance();
+	jni::Object b = a;
+
+	ASSERT(a == b);
+}
+
 int main()
 {
 	RUN_TEST(Vm_detectsJreInstall);
@@ -135,6 +143,7 @@ int main()
 		RUN_TEST(Class_get_staticField_byName);
 		RUN_TEST(Class_call_staticMethod_byName);
 		RUN_TEST(Object_defaultConstructor_isNull);
+		RUN_TEST(Object_copyConstructorIsSameObject);
 	}
 
 	std::cout << "Press a key to continue..." << std::endl;

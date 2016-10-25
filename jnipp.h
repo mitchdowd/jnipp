@@ -77,6 +77,20 @@ namespace jni
 		Object& operator=(Object&& other);
 
 		/**
+			Tells whether the two Objects refer to the same Java Object.
+			\param other the Object to compare with.
+			\return `true` if the same, `false` otherwise.
+		 */
+		bool operator==(const Object& other) const;
+
+		/**
+			Tells whether the two Objects refer to the same Java Object.
+			\param other the Object to compare with.
+			\return `true` if the different, `false` otherwise.
+		 */
+		bool operator!=(const Object& other) const { return !operator==(other); }
+
+		/**
 			Calls the given method on this Object. The method should have no
 			parameters. Note that the return type should be explicitly stated
 			in the function call.

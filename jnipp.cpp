@@ -197,6 +197,11 @@ namespace jni
 		return *this;
 	}
 
+	bool Object::operator==(const Object& other) const
+	{
+		return env()->IsSameObject(_handle, other._handle) != JNI_FALSE;
+	}
+
 	Object& Object::operator=(Object&& other)
 	{
 		if (_handle != other._handle)
