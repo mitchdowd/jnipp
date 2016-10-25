@@ -1,18 +1,29 @@
+// Project Dependencies
+#include <jnipp.h>
+
 // Local Dependencies
-#include "../jnipp.h"
+#include "testing.h"
+
+TEST(VM_throwsExceptionOnBadPath)
+{
+	try
+	{
+		jni::Vm vm("bad path");
+	}
+	catch (jni::InitializationException&)
+	{
+		ASSERT(1);
+		return;
+	}
+
+	ASSERT(0);
+}
 
 int main()
 {
-	jni::Vm vm("C:\\Program Files\\Java\\jre1.8.0_31\\bin\\server\\jvm.dll");
+	RUN_TEST(VM_throwsExceptionOnBadPath);
 
-	jni::Class Integer = jni::Class("java/lang/Integer");
-
-	int i = Integer.get<int>("SIZE");
-
-	jni::Object obj = Integer.newInstance(L"100");
-
-	std::string str = obj.call<std::string>("toString");
-
+	std::cin.get();
 	return 0;
 }
 
