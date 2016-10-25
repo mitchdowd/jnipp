@@ -10,6 +10,8 @@ namespace jni
 		This namespace is for messy implementation details only. It is not a part
 		of the external API and is subject to change at any time. It is only in a
 		header file due to the fact it is required by some template functions.
+
+		Long story short...  this stuff be messy, yo.
 	 */
 	namespace internal
 	{
@@ -20,12 +22,12 @@ namespace jni
 		 */
 
 		template <class TArg>
-		String valueSig(const TArg*);
+		std::string valueSig(const TArg*);
 
-		inline String sig() { return ""; }
+		inline std::string sig() { return ""; }
 
 		template <class TArg, class... TArgs>
-		String sig(const TArg& arg, TArgs... args) {
+		std::string sig(const TArg& arg, TArgs... args) {
 			return valueSig(&arg) + sig(args...);
 		}
 
@@ -58,15 +60,15 @@ namespace jni
 		template <> inline void cleanupArgs<void>(value_t* values) {}
 
 		template <class... TArgs>
-		class ArgTransform
+		class ArgArray
 		{
 		public:
-			ArgTransform(TArgs... args) {
-				std::memset(this, 0, sizeof(ArgTransform<TArgs...>));
+			ArgArray(TArgs... args) {
+				std::memset(this, 0, sizeof(ArgArray<TArgs...>));
 				args(values, args...);
 			}
 
-			~ArgTransform() {
+			~ArgArray() {
 				cleanupArgs<TArgs...>(values);
 			}
 

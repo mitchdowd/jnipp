@@ -15,14 +15,17 @@ namespace jni
 	namespace internal
 	{
 		// Base Type Signatures
-		template <> String valueSig(const void*)		{ return "V"; }
-		template <> String valueSig(const bool*)		{ return "Z"; }
-		template <> String valueSig(const wchar_t*)		{ return "C"; }
-		template <> String valueSig(const short*)		{ return "S"; }
-		template <> String valueSig(const int*)			{ return "I"; }
-		template <> String valueSig(const long long*)	{ return "J"; }
-		template <> String valueSig(const float*)		{ return "F"; }
-		template <> String valueSig(const double*)		{ return "D"; }
+		template <> std::string valueSig(const void*)			{ return "V"; }
+		template <> std::string valueSig(const bool*)			{ return "Z"; }
+		template <> std::string valueSig(const wchar_t*)		{ return "C"; }
+		template <> std::string valueSig(const short*)			{ return "S"; }
+		template <> std::string valueSig(const int*)			{ return "I"; }
+		template <> std::string valueSig(const long long*)		{ return "J"; }
+		template <> std::string valueSig(const float*)			{ return "F"; }
+		template <> std::string valueSig(const double*)			{ return "D"; }
+		template <> std::string valueSig(const String*)			{ return "Ljava/lang/String;"; }
+		template <> std::string valueSig(const char* const*)	{ return "Ljava/lang/String;"; }
+		template <> std::string valueSig(const wchar_t* const*)	{ return "Ljava/lang/String;"; }
 
 		// Base Type Conversions
 		template <> void valueArg(value_t* v, const bool& a)		{ ((jvalue*) v)->z = a; }
@@ -38,11 +41,6 @@ namespace jni
 			String Implementations
 		 */
 
-		template <> String valueSig(const String*)
-		{
-			return "Ljava/lang/String;";
-		}
-
 		template <> void valueArg(value_t* v, const String& a)
 		{
 			((jvalue*) v)->l = env()->NewStringUTF(a.c_str());
@@ -53,11 +51,6 @@ namespace jni
 			env()->DeleteLocalRef(((jvalue*)v)->l);
 		}
 
-		template <> String valueSig(const char* const*)
-		{
-			return "Ljava/lang/String;";
-		}
-
 		template <> void valueArg(value_t* v, const char* const& a)
 		{
 			((jvalue*) v)->l = env()->NewStringUTF(a);
@@ -66,11 +59,6 @@ namespace jni
 		template <> void cleanupArg<const char*>(value_t* v)
 		{
 			env()->DeleteLocalRef(((jvalue*) v)->l);
-		}
-
-		template <> String valueSig(const wchar_t* const*)
-		{
-			return "Ljava/lang/String;";
 		}
 
 		template <> void valueArg(value_t* v, const wchar_t* const& a)
