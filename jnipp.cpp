@@ -1,4 +1,7 @@
 #ifdef _WIN32
+# define WIN32_LEAN_AND_MEAN 1
+
+  // Windows Dependencies
 # include <windows.h>
 #else
 # error "Platform not supported"
@@ -679,12 +682,54 @@ namespace jni
 
 	typedef jint (JNICALL *CreateVm_t)(JavaVM**, void**, void*);
 
-	Vm::Vm(const char* path)
+
+	static std::string detectJvmPath()
 	{
+		std::string result;
+
+#ifdef _WIN32
+
+		BYTE buffer[1024];
+		DWORD size = sizeof(buffer);
+		HKEY versionKey;
+
+		if (::RegOpenKeyA(HKEY_LOCAL_MACHINE, "Software\\JavaSoft\\Java Runtime Environment\\", &versionKey) == ERROR_SUCCESS)
+		{
+			if (::RegQueryValueEx(versionKey, "CurrentVersion", NULL, NULL, buffer, &size) == ERROR_SUCCESS)
+			{
+				HKEY libKey;
+
+				std::string keyName = std::string("Software\\JavaSoft\\Java Runtime Environment\\") + (const char*) buffer;
+
+				::RegCloseKey(versionKey);
+
+				if (::RegOpenKeyA(HKEY_LOCAL_MACHINE, keyName.c_str(), &libKey) == ERROR_SUCCESS)
+				{
+					size = sizeof(buffer);
+
+					if (::RegQueryValueEx(libKey, "RuntimeLib", NULL, NULL, buffer, &size) == ERROR_SUCCESS)
+					{
+						result = (const char*) buffer;
+					}
+
+					::RegCloseKey(libKey);
+				}
+			}
+		}
+
+#endif // _WIN32
+
+		return result;
+	}
+
+	Vm::Vm(const char* path_)
+	{
+		std::string path = path_ ? path_ : detectJvmPath();
+
 		if (javaVm.load() != nullptr)
 			throw InitializationException("Java Virtual Machine already initialized");
-		if (path == nullptr)
-			throw InitializationException("Automatic path selection not yet implemented");
+		if (path.length() == 0)
+			throw InitializationException("Could not locate Java Virtual Machine");
 
 		JavaVM* vm;
 		JavaVM* expected = nullptr;
@@ -695,10 +740,22 @@ namespace jni
 
 #ifdef _WIN32
 		
-		HMODULE lib = ::LoadLibraryA(path);
+		HMODULE lib = ::LoadLibraryA(path.c_str());
 
 		if (lib == NULL)
-			throw InitializationException("Could not load JVM library");
+		{
+			size_t index = path.rfind("\\client\\");
+
+			// JRE path names switched from "client" to "server" directory.
+			if (index != std::string::npos)
+			{
+				path = path.replace(index, 8, "\\server\\");
+				lib = ::LoadLibraryA(path.c_str());
+			}
+
+			if (lib == NULL)
+				throw InitializationException("Could not load JVM library");
+		}
 
 		CreateVm_t JNI_CreateJavaVM = (CreateVm_t) ::GetProcAddress(lib, "JNI_CreateJavaVM");
 

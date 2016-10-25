@@ -472,9 +472,9 @@ namespace jni
 	public:
 		/**
 			Starts the Java Virtual Machine. 
-			\param path The path to the jvm.dll 
+			\param path The path to the jvm.dll (or null for auto-detect).
 		 */
-		Vm(const char* path);
+		Vm(const char* path = nullptr);
 
 		/** Destroys the running instance of the JVM. */
 		~Vm();

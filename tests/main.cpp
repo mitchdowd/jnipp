@@ -19,9 +19,26 @@ TEST(VM_throwsExceptionOnBadPath)
 	ASSERT(0);
 }
 
+TEST(VM_notAllowedMultipleVms)
+{
+	try
+	{
+		jni::Vm vm1;
+		jni::Vm vm2;
+	}
+	catch (jni::InitializationException&)
+	{
+		ASSERT(1);
+		return;
+	}
+
+	ASSERT(0);
+}
+
 int main()
 {
 	RUN_TEST(VM_throwsExceptionOnBadPath);
+	RUN_TEST(VM_notAllowedMultipleVms);
 
 	std::cin.get();
 	return 0;
