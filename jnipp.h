@@ -286,6 +286,12 @@ namespace jni
 		method_t getStaticMethod(const char* name, const char* signature) const;
 
 		/**
+			Gets the parent Class of this Class.
+			\return The parent class.
+		 */
+		Class getParent() const;
+
+		/**
 			Calls a static method on this Class. The method should have no
 			parameters. Note that the return type should be explicitly stated
 			in the function call.

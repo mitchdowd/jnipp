@@ -465,6 +465,11 @@ namespace jni
 		return id;
 	}
 
+	Class Class::getParent() const
+	{
+		return Class(env()->GetSuperclass(jclass(getHandle())), DeleteLocalInput);
+	}
+
 	template <>	bool Class::callStaticMethod(method_t method, internal::value_t* args)
 	{
 		auto result = env()->CallStaticBooleanMethodA(jclass(getHandle()), method, (jvalue*) args);
