@@ -345,6 +345,68 @@ namespace jni
 		}
 
 		/**
+			Calls a non-static method on this Class, applying it to the supplied
+			Object. The difference between this and Object.call() is that the
+			specific class implementation of the method is called, rather than
+			doing a virtual method lookup.
+			\param obj The Object to call the method on.
+			\param method The method to call.
+			\return The method's return value.
+		 */
+		template <class TReturn>
+		TReturn call(const Object& obj, method_t method) {
+			return callExactMethod<TReturn>(obj.getHandle(), method, nullptr);
+		}
+
+		/**
+			Calls a non-static method on this Class, applying it to the supplied
+			Object. The difference between this and Object.call() is that the
+			specific class implementation of the method is called, rather than
+			doing a virtual method lookup.
+			\param obj The Object to call the method on.
+			\param name The name of the method to call.
+			\return The method's return value.
+		 */
+		template <class TReturn>
+		TReturn call(const Object& obj, const char* name) {
+			method_t method = getMethod(name, ("()" + internal::valueSig((TReturn*) nullptr)).c_str());
+			return call<TReturn>(obj, method);
+		}
+
+		/**
+			Calls a non-static method on this Class, applying it to the supplied
+			Object. The difference between this and Object.call() is that the
+			specific class implementation of the method is called, rather than
+			doing a virtual method lookup.
+			\param obj The Object to call the method on.
+			\param method The method to call.
+			\param args Arguments to pass to the method.
+			\return The method's return value.
+		 */
+		template <class TReturn, class... TArgs>
+		TReturn call(const Object& obj, method_t method, TArgs... args) {
+			internal::ArgTransform<TArgs...> transform(args...);
+			return callExactMethod<TReturn>(obj.getHandle(), method, transform.values);
+		}
+
+		/**
+			Calls a non-static method on this Class, applying it to the supplied
+			Object. The difference between this and Object.call() is that the
+			specific class implementation of the method is called, rather than
+			doing a virtual method lookup.
+			\param obj The Object to call the method on.
+			\param name The name of the method to call.
+			\param args Arguments to pass to the method.
+			\return The method's return value.
+		 */
+		template <class TReturn, class... TArgs>
+		TReturn call(const Object& obj, const char* name, TArgs... args) {
+			String sig = "(" + internal::sig(args...) + ")" + internal::valueSig((TReturn*) nullptr);
+			method_t method = getMethod(name, sig.c_str());
+			return call<TReturn>(obj, method, args...);
+		}
+
+		/**
 			Gets a static field value from this Class. Note that the field type
 			should be explicitly stated in the function call.
 			\param field Identifier for the field to retrieve.
@@ -389,6 +451,7 @@ namespace jni
 	private:
 		// Helper Functions
 		template <class TType> TType callStaticMethod(method_t method, internal::value_t* values);
+		template <class TType> TType callExactMethod(jobject obj, method_t method, internal::value_t* values);
 		Object newObject(method_t constructor, internal::value_t* args) const;
 	};
 
