@@ -47,6 +47,7 @@ namespace jni
 		template <class TArg> void cleanupArg(value_t* value) {}
 		template <> void cleanupArg<String>(value_t* value);
 		template <> void cleanupArg<const char*>(value_t* value);
+		template <> void cleanupArg<const wchar_t*>(value_t* value);
 
 		template <class TArg = void, class... TArgs>
 		void cleanupArgs(value_t* values) {

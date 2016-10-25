@@ -1,6 +1,9 @@
 // External Dependencies
 #include <jni.h>
 
+// Standard Dependencies
+#include <codecvt>
+
 // Local Dependencies
 #include "internal.h"
 
@@ -61,6 +64,25 @@ namespace jni
 		}
 
 		template <> void cleanupArg<const char*>(value_t* v)
+		{
+			env()->DeleteLocalRef(((jvalue*) v)->l);
+		}
+
+		template <> String valueSig(const wchar_t* const*)
+		{
+			return "Ljava/lang/String;";
+		}
+
+		template <> void valueArg(value_t* v, const wchar_t* const& a)
+		{
+			// Convert to UTF-8 first.
+			std::wstring_convert<std::codecvt_utf8<wchar_t>> cvt;
+			std::string bytes = cvt.to_bytes(a);
+
+			((jvalue*) v)->l = env()->NewStringUTF(bytes.c_str());
+		}
+
+		template <> void cleanupArg<const wchar_t*>(value_t* v)
 		{
 			env()->DeleteLocalRef(((jvalue*) v)->l);
 		}

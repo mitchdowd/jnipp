@@ -9,7 +9,7 @@ int main()
 
 	int i = Integer.get<int>("SIZE");
 
-	jni::Object obj = Integer.newInstance("100");
+	jni::Object obj = Integer.newInstance(L"100");
 
 	std::string str = obj.call<std::string>("toString");
 

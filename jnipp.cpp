@@ -9,6 +9,7 @@
 
 // Standard Dependencies
 #include <atomic>
+#include <codecvt>
 #include <string>
 
 // Local Dependencies
@@ -362,6 +363,28 @@ namespace jni
 		JNIEnv* env = jni::env();
 
 		jobject handle = env->NewStringUTF(value.c_str());
+		env->SetObjectField(_handle, field, handle);
+		env->DeleteLocalRef(handle);
+	}
+
+	template <> void Object::set(field_t field, const char* const& value)
+	{
+		JNIEnv* env = jni::env();
+
+		jobject handle = env->NewStringUTF(value);
+		env->SetObjectField(_handle, field, handle);
+		env->DeleteLocalRef(handle);
+	}
+
+	template <> void Object::set(field_t field, const wchar_t* const& value)
+	{
+		JNIEnv* env = jni::env();
+
+		// Convert to UTF-8 first.
+		std::wstring_convert<std::codecvt_utf8<wchar_t>> cvt;
+		std::string bytes = cvt.to_bytes(value);
+
+		jobject handle = env->NewStringUTF(bytes.c_str());
 		env->SetObjectField(_handle, field, handle);
 		env->DeleteLocalRef(handle);
 	}
