@@ -232,6 +232,12 @@ namespace jni
 		Object newInstance() const;
 
 		/**
+			Tells whether this Class is null or valid.
+			\return `true` if null, `false` if valid.
+		 */
+		bool isNull() const noexcept { return Object::isNull(); }
+
+		/**
 			Creates a new instance of this Java class and returns a reference to
 			it. The constructor signature is determined by the supplied parameters,
 			and the parameters are then passed to the constructor.
