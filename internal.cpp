@@ -5,7 +5,7 @@
 #include <codecvt>
 
 // Local Dependencies
-#include "internal.h"
+#include "jnipp.h"
 
 namespace jni
 {
@@ -36,6 +36,7 @@ namespace jni
 		template <> void valueArg(value_t* v, const float& a)		{ ((jvalue*) v)->f = a; }
 		template <> void valueArg(value_t* v, const double& a)		{ ((jvalue*) v)->d = a; }
 		template <> void valueArg(value_t* v, const jobject& a)		{ ((jvalue*) v)->l = a; }
+		template <> void valueArg(value_t* v, const Object& a)		{ ((jvalue*) v)->l = a.getHandle(); }
 
 		/*
 			String Implementations

@@ -232,7 +232,7 @@ namespace jni
 		return _handle == NULL;
 	}
 
-	template <>	bool Object::callMethod(method_t method, internal::value_t* args)
+	template <>	bool Object::callMethod(method_t method, internal::value_t* args) const
 	{
 		auto result = env()->CallBooleanMethodA(_handle, method, (jvalue*) args);
 		handleJavaExceptions();
@@ -249,7 +249,7 @@ namespace jni
 		env()->SetBooleanField(_handle, field, value);
 	}
 
-	template <>	wchar_t Object::callMethod(method_t method, internal::value_t* args)
+	template <>	wchar_t Object::callMethod(method_t method, internal::value_t* args) const
 	{
 		auto result = env()->CallCharMethodA(_handle, method, (jvalue*) args);
 		handleJavaExceptions();
@@ -266,7 +266,7 @@ namespace jni
 		env()->SetCharField(_handle, field, value);
 	}
 
-	template <>	short Object::callMethod(method_t method, internal::value_t* args)
+	template <>	short Object::callMethod(method_t method, internal::value_t* args) const
 	{
 		auto result = env()->CallShortMethodA(_handle, method, (jvalue*) args);
 		handleJavaExceptions();
@@ -283,7 +283,7 @@ namespace jni
 		env()->SetShortField(_handle, field, value);
 	}
 
-	template <>	int Object::callMethod(method_t method, internal::value_t* args)
+	template <>	int Object::callMethod(method_t method, internal::value_t* args) const
 	{
 		auto result = env()->CallIntMethodA(_handle, method, (jvalue*) args);
 		handleJavaExceptions();
@@ -300,7 +300,7 @@ namespace jni
 		env()->SetIntField(_handle, field, value);
 	}
 
-	template <>	long long Object::callMethod(method_t method, internal::value_t* args)
+	template <>	long long Object::callMethod(method_t method, internal::value_t* args) const
 	{
 		auto result = env()->CallLongMethodA(_handle, method, (jvalue*) args);
 		handleJavaExceptions();
@@ -317,7 +317,7 @@ namespace jni
 		env()->SetLongField(_handle, field, value);
 	}
 
-	template <>	float Object::callMethod(method_t method, internal::value_t* args)
+	template <>	float Object::callMethod(method_t method, internal::value_t* args) const
 	{
 		auto result = env()->CallFloatMethodA(_handle, method, (jvalue*) args);
 		handleJavaExceptions();
@@ -334,7 +334,7 @@ namespace jni
 		env()->SetFloatField(_handle, field, value);
 	}
 
-	template <>	double Object::callMethod(method_t method, internal::value_t* args)
+	template <>	double Object::callMethod(method_t method, internal::value_t* args) const
 	{
 		auto result = env()->CallDoubleMethodA(_handle, method, (jvalue*) args);
 		handleJavaExceptions();
@@ -351,7 +351,7 @@ namespace jni
 		env()->SetDoubleField(_handle, field, value);
 	}
 
-	template <>	String Object::callMethod(method_t method, internal::value_t* args)
+	template <>	String Object::callMethod(method_t method, internal::value_t* args) const
 	{
 		auto result = env()->CallObjectMethodA(_handle, method, (jvalue*) args);
 		handleJavaExceptions();
@@ -475,14 +475,19 @@ namespace jni
 		return Class(env()->GetSuperclass(jclass(getHandle())), DeleteLocalInput);
 	}
 
-	template <>	bool Class::callStaticMethod(method_t method, internal::value_t* args)
+	String Class::getName() const
+	{
+		return Object::call<String>("getName");
+	}
+
+	template <>	bool Class::callStaticMethod(method_t method, internal::value_t* args) const
 	{
 		auto result = env()->CallStaticBooleanMethodA(jclass(getHandle()), method, (jvalue*) args);
 		handleJavaExceptions();
 		return result != 0;
 	}
 
-	template <>	bool Class::callExactMethod(jobject obj, method_t method, internal::value_t* args)
+	template <>	bool Class::callExactMethod(jobject obj, method_t method, internal::value_t* args) const
 	{
 		auto result = env()->CallNonvirtualBooleanMethodA(obj, jclass(getHandle()), method, (jvalue*) args);
 		handleJavaExceptions();
@@ -499,14 +504,14 @@ namespace jni
 		env()->SetStaticBooleanField(jclass(getHandle()), field, value);
 	}
 
-	template <>	wchar_t Class::callStaticMethod(method_t method, internal::value_t* args)
+	template <>	wchar_t Class::callStaticMethod(method_t method, internal::value_t* args) const
 	{
 		auto result = env()->CallStaticCharMethodA(jclass(getHandle()), method, (jvalue*) args);
 		handleJavaExceptions();
 		return result;
 	}
 
-	template <>	wchar_t Class::callExactMethod(jobject obj, method_t method, internal::value_t* args)
+	template <>	wchar_t Class::callExactMethod(jobject obj, method_t method, internal::value_t* args) const
 	{
 		auto result = env()->CallNonvirtualCharMethodA(obj, jclass(getHandle()), method, (jvalue*) args);
 		handleJavaExceptions();
@@ -523,14 +528,14 @@ namespace jni
 		env()->SetStaticCharField(jclass(getHandle()), field, value);
 	}
 
-	template <>	short Class::callStaticMethod(method_t method, internal::value_t* args)
+	template <>	short Class::callStaticMethod(method_t method, internal::value_t* args) const
 	{
 		auto result = env()->CallStaticShortMethodA(jclass(getHandle()), method, (jvalue*) args);
 		handleJavaExceptions();
 		return result;
 	}
 
-	template <>	short Class::callExactMethod(jobject obj, method_t method, internal::value_t* args)
+	template <>	short Class::callExactMethod(jobject obj, method_t method, internal::value_t* args) const
 	{
 		auto result = env()->CallNonvirtualShortMethodA(obj, jclass(getHandle()), method, (jvalue*) args);
 		handleJavaExceptions();
@@ -547,14 +552,14 @@ namespace jni
 		env()->SetStaticShortField(jclass(getHandle()), field, value);
 	}
 
-	template <>	int Class::callStaticMethod(method_t method, internal::value_t* args)
+	template <>	int Class::callStaticMethod(method_t method, internal::value_t* args) const
 	{
 		auto result = env()->CallStaticIntMethodA(jclass(getHandle()), method, (jvalue*) args);
 		handleJavaExceptions();
 		return result;
 	}
 
-	template <>	int Class::callExactMethod(jobject obj, method_t method, internal::value_t* args)
+	template <>	int Class::callExactMethod(jobject obj, method_t method, internal::value_t* args) const
 	{
 		auto result = env()->CallNonvirtualIntMethodA(obj, jclass(getHandle()), method, (jvalue*) args);
 		handleJavaExceptions();
@@ -571,14 +576,14 @@ namespace jni
 		env()->SetStaticIntField(jclass(getHandle()), field, value);
 	}
 
-	template <>	long long Class::callStaticMethod(method_t method, internal::value_t* args)
+	template <>	long long Class::callStaticMethod(method_t method, internal::value_t* args) const
 	{
 		auto result = env()->CallStaticLongMethodA(jclass(getHandle()), method, (jvalue*) args);
 		handleJavaExceptions();
 		return result;
 	}
 
-	template <>	long long Class::callExactMethod(jobject obj, method_t method, internal::value_t* args)
+	template <>	long long Class::callExactMethod(jobject obj, method_t method, internal::value_t* args) const
 	{
 		auto result = env()->CallNonvirtualLongMethodA(obj, jclass(getHandle()), method, (jvalue*) args);
 		handleJavaExceptions();
@@ -595,14 +600,14 @@ namespace jni
 		env()->SetStaticLongField(jclass(getHandle()), field, value);
 	}
 
-	template <>	float Class::callStaticMethod(method_t method, internal::value_t* args)
+	template <>	float Class::callStaticMethod(method_t method, internal::value_t* args) const
 	{
 		auto result = env()->CallStaticFloatMethodA(jclass(getHandle()), method, (jvalue*) args);
 		handleJavaExceptions();
 		return result;
 	}
 
-	template <>	float Class::callExactMethod(jobject obj, method_t method, internal::value_t* args)
+	template <>	float Class::callExactMethod(jobject obj, method_t method, internal::value_t* args) const
 	{
 		auto result = env()->CallNonvirtualFloatMethodA(obj, jclass(getHandle()), method, (jvalue*) args);
 		handleJavaExceptions();
@@ -619,14 +624,14 @@ namespace jni
 		env()->SetStaticFloatField(jclass(getHandle()), field, value);
 	}
 
-	template <>	double Class::callStaticMethod(method_t method, internal::value_t* args)
+	template <>	double Class::callStaticMethod(method_t method, internal::value_t* args) const
 	{
 		auto result = env()->CallStaticDoubleMethodA(jclass(getHandle()), method, (jvalue*) args);
 		handleJavaExceptions();
 		return result;
 	}
 
-	template <>	double Class::callExactMethod(jobject obj, method_t method, internal::value_t* args)
+	template <>	double Class::callExactMethod(jobject obj, method_t method, internal::value_t* args) const
 	{
 		auto result = env()->CallNonvirtualDoubleMethodA(obj, jclass(getHandle()), method, (jvalue*) args);
 		handleJavaExceptions();
@@ -643,14 +648,14 @@ namespace jni
 		env()->SetStaticDoubleField(jclass(getHandle()), field, value);
 	}
 
-	template <>	String Class::callStaticMethod(method_t method, internal::value_t* args)
+	template <>	String Class::callStaticMethod(method_t method, internal::value_t* args) const
 	{
 		auto result = env()->CallStaticObjectMethodA(jclass(getHandle()), method, (jvalue*) args);
 		handleJavaExceptions();
 		return toString(result);
 	}
 
-	template <>	String Class::callExactMethod(jobject obj, method_t method, internal::value_t* args)
+	template <>	String Class::callExactMethod(jobject obj, method_t method, internal::value_t* args) const
 	{
 		auto result = env()->CallNonvirtualObjectMethodA(obj, jclass(getHandle()), method, (jvalue*)args);
 		handleJavaExceptions();

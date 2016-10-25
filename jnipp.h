@@ -98,7 +98,7 @@ namespace jni
 			\return The method's return value.
 		 */
 		template <class TReturn>
-		TReturn call(method_t method) { return callMethod<TReturn>(method, nullptr); }
+		TReturn call(method_t method) const { return callMethod<TReturn>(method, nullptr); }
 
 		/**
 			Calls the method on this Object with the given name, and no arguments.
@@ -108,7 +108,7 @@ namespace jni
 			\return The method's return value.
 		 */
 		template <class TReturn>
-		TReturn call(const char* name) {
+		TReturn call(const char* name) const {
 			method_t method = Class(getClass()).getMethod(name, ("()" + internal::valueSig((TReturn*) nullptr)).c_str());
 			return call<TReturn>(method);
 		}
@@ -122,7 +122,7 @@ namespace jni
 			\return The method's return value.
 		 */
 		template <class TReturn, class... TArgs>
-		TReturn call(method_t method, TArgs... args) {
+		TReturn call(method_t method, TArgs... args) const {
 			internal::ArgArray<TArgs...> transform(args...);
 			return callMethod<TReturn>(method, transform.values);
 		}
@@ -137,7 +137,7 @@ namespace jni
 			\return The method's return value.
 		 */
 		template <class TReturn, class... TArgs>
-		TReturn call(const char* name, TArgs... args) {
+		TReturn call(const char* name, TArgs... args) const {
 			String sig = "(" + internal::sig(args...) + ")" + internal::valueSig((TReturn*) nullptr);
 			method_t method = Class(getClass()).getMethod(name, sig.c_str());
 			return call<TReturn>(method, args...);
@@ -209,7 +209,7 @@ namespace jni
 
 	private:
 		// Helper Functions
-		template <class TType> TType callMethod(method_t method, internal::value_t* values);
+		template <class TType> TType callMethod(method_t method, internal::value_t* values) const;
 
 		// Instance Variables
 		jobject _handle;
@@ -312,6 +312,12 @@ namespace jni
 		Class getParent() const;
 
 		/**
+			Gets the JNI-qualified name of this Class.
+			\return The Class name.
+		 */
+		String getName() const;
+
+		/**
 			Calls a static method on this Class. The method should have no
 			parameters. Note that the return type should be explicitly stated
 			in the function call.
@@ -319,7 +325,7 @@ namespace jni
 			\return The method's return value.
 		 */
 		template <class TReturn>
-		TReturn call(method_t method) { return callStaticMethod<TReturn>(method, nullptr); }
+		TReturn call(method_t method) const { return callStaticMethod<TReturn>(method, nullptr); }
 
 		/**
 			Calls a static method on this Class with the given name, and no arguments.
@@ -329,7 +335,7 @@ namespace jni
 			\return The method's return value.
 		 */
 		template <class TReturn>
-		TReturn call(const char* name) {
+		TReturn call(const char* name) const {
 			method_t method = getMethod(name, ("()" + internal::valueSig((TReturn*) nullptr)).c_str());
 			return call<TReturn>(method);
 		}
@@ -343,7 +349,7 @@ namespace jni
 			\return The method's return value.
 		 */
 		template <class TReturn, class... TArgs>
-		TReturn call(method_t method, TArgs... args) {
+		TReturn call(method_t method, TArgs... args) const {
 			internal::ArgArray<TArgs...> transform(args...);
 			return callStaticMethod<TReturn>(method, transform.values);
 		}
@@ -358,7 +364,7 @@ namespace jni
 			\return The method's return value.
 		 */
 		template <class TReturn, class... TArgs>
-		TReturn call(const char* name, TArgs... args) {
+		TReturn call(const char* name, TArgs... args) const {
 			String sig = "(" + internal::sig(args...) + ")" + internal::valueSig((TReturn*) nullptr);
 			method_t method = getStaticMethod(name, sig.c_str());
 			return call<TReturn>(method, args...);
@@ -374,7 +380,7 @@ namespace jni
 			\return The method's return value.
 		 */
 		template <class TReturn>
-		TReturn call(const Object& obj, method_t method) {
+		TReturn call(const Object& obj, method_t method) const {
 			return callExactMethod<TReturn>(obj.getHandle(), method, nullptr);
 		}
 
@@ -388,7 +394,7 @@ namespace jni
 			\return The method's return value.
 		 */
 		template <class TReturn>
-		TReturn call(const Object& obj, const char* name) {
+		TReturn call(const Object& obj, const char* name) const {
 			method_t method = getMethod(name, ("()" + internal::valueSig((TReturn*) nullptr)).c_str());
 			return call<TReturn>(obj, method);
 		}
@@ -404,7 +410,7 @@ namespace jni
 			\return The method's return value.
 		 */
 		template <class TReturn, class... TArgs>
-		TReturn call(const Object& obj, method_t method, TArgs... args) {
+		TReturn call(const Object& obj, method_t method, TArgs... args) const {
 			internal::ArgArray<TArgs...> transform(args...);
 			return callExactMethod<TReturn>(obj.getHandle(), method, transform.values);
 		}
@@ -420,7 +426,7 @@ namespace jni
 			\return The method's return value.
 		 */
 		template <class TReturn, class... TArgs>
-		TReturn call(const Object& obj, const char* name, TArgs... args) {
+		TReturn call(const Object& obj, const char* name, TArgs... args) const {
 			String sig = "(" + internal::sig(args...) + ")" + internal::valueSig((TReturn*) nullptr);
 			method_t method = getMethod(name, sig.c_str());
 			return call<TReturn>(obj, method, args...);
@@ -470,8 +476,8 @@ namespace jni
 
 	private:
 		// Helper Functions
-		template <class TType> TType callStaticMethod(method_t method, internal::value_t* values);
-		template <class TType> TType callExactMethod(jobject obj, method_t method, internal::value_t* values);
+		template <class TType> TType callStaticMethod(method_t method, internal::value_t* values) const;
+		template <class TType> TType callExactMethod(jobject obj, method_t method, internal::value_t* values) const;
 		Object newObject(method_t constructor, internal::value_t* args) const;
 	};
 

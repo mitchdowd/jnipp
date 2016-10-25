@@ -42,6 +42,13 @@ TEST(Class_findByName)
 	ASSERT(!cls.isNull());
 }
 
+TEST(Class_getName)
+{
+	jni::Class cls("java/lang/String");
+
+	ASSERT(cls.getName() == "java.lang.String");
+}
+
 TEST(Class_newInstance)
 {
 	jni::Object str = jni::Class("java/lang/String").newInstance();
@@ -220,6 +227,7 @@ int main()
 
 		// jni::Class Tests
 		RUN_TEST(Class_findByName);
+		RUN_TEST(Class_getName);
 		RUN_TEST(Class_newInstance);
 		RUN_TEST(Class_newInstance_withArgs);
 		RUN_TEST(Class_getStaticField);
