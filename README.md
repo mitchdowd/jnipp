@@ -1,8 +1,6 @@
 Java Native Interface for C++
 =============================
 
-	Note: This library is only in early development and not yet ready for use!
-
 ## Overview
 
 JNIPP is just a C++ wrapper for the standard Java Native Interface (JNI). It
@@ -18,8 +16,8 @@ To compile you will need:
 
 ## Usage
 
-	For comprehensive examples on how to use *jnipp*, see the `tests` project
-	in the project source code.
+> For comprehensive examples on how to use *jnipp*, see the `tests` project
+> in the project source code.
 
 There are two situations where the Java Native Interface would be needed.
  - A Java application calling C/C++ functions; or
