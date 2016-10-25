@@ -4,6 +4,21 @@
 // Local Dependencies
 #include "testing.h"
 
+TEST(Vm_detectsJreInstall)
+{
+	try
+	{
+		jni::Vm vm;
+	}
+	catch (jni::InitializationException&)
+	{
+		ASSERT(0);
+		return;
+	}
+
+	ASSERT(1);
+}
+
 TEST(VM_notAllowedMultipleVms)
 {
 	try
@@ -104,19 +119,23 @@ TEST(Object_defaultConstructor_isNull)
 
 int main()
 {
-	jni::Vm vm;
+	RUN_TEST(Vm_detectsJreInstall);
 
-	RUN_TEST(VM_notAllowedMultipleVms);
-	RUN_TEST(Class_findByName);
-	RUN_TEST(Class_newInstance);
-	RUN_TEST(Class_newInstance_withArgs);
-	RUN_TEST(Class_getStaticField);
-	RUN_TEST(Class_getMethod);
-	RUN_TEST(Class_getStaticMethod);
-	RUN_TEST(Class_get_staticField);
-	RUN_TEST(Class_get_staticField_byName);
-	RUN_TEST(Class_call_staticMethod_byName);
-	RUN_TEST(Object_defaultConstructor_isNull);
+	{
+		jni::Vm vm;
+
+		RUN_TEST(VM_notAllowedMultipleVms);
+		RUN_TEST(Class_findByName);
+		RUN_TEST(Class_newInstance);
+		RUN_TEST(Class_newInstance_withArgs);
+		RUN_TEST(Class_getStaticField);
+		RUN_TEST(Class_getMethod);
+		RUN_TEST(Class_getStaticMethod);
+		RUN_TEST(Class_get_staticField);
+		RUN_TEST(Class_get_staticField_byName);
+		RUN_TEST(Class_call_staticMethod_byName);
+		RUN_TEST(Object_defaultConstructor_isNull);
+	}
 
 	std::cout << "Press a key to continue..." << std::endl;
 	std::cin.get();

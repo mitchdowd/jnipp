@@ -21,8 +21,8 @@
 namespace jni
 {
 	// Static Variables
-	static std::atomic<JavaVM*> javaVm = nullptr;
-	static void*   library = nullptr;
+	static std::atomic_bool isVm = false;
+	static JavaVM* javaVm        = nullptr;
 
 	/**
 		Maintains the lifecycle of a JNIEnv.
@@ -121,15 +121,12 @@ namespace jni
 
 	void init(JNIEnv* env)
 	{
-		if (javaVm.load() == nullptr)
+		bool expected = false;
+
+		if (isVm.compare_exchange_strong(expected, true))
 		{
-			JavaVM* expected = nullptr;
-			JavaVM* vm = nullptr;
-
-			if (env->GetJavaVM(&vm) != 0)
+			if (javaVm == nullptr && env->GetJavaVM(&javaVm) != 0)
 				throw InitializationException("Could not acquire Java VM");
-
-			javaVm.compare_exchange_strong(expected, vm);
 		}
 	}
 
@@ -724,84 +721,66 @@ namespace jni
 
 	Vm::Vm(const char* path_)
 	{
+		bool expected = false;
+
 		std::string path = path_ ? path_ : detectJvmPath();
 
-		if (javaVm.load() != nullptr)
-			throw InitializationException("Java Virtual Machine already initialized");
 		if (path.length() == 0)
 			throw InitializationException("Could not locate Java Virtual Machine");
+		if (!isVm.compare_exchange_strong(expected, true))
+			throw InitializationException("Java Virtual Machine already initialized");
 
-		JavaVM* vm;
-		JavaVM* expected = nullptr;
-		JNIEnv* env;
-		JavaVMInitArgs args = {};
-
-		args.version = JNI_VERSION_1_2;
+		if (javaVm == nullptr)
+		{
+			JNIEnv* env;
+			JavaVMInitArgs args = {};
+			args.version = JNI_VERSION_1_2;
 
 #ifdef _WIN32
-		
-		HMODULE lib = ::LoadLibraryA(path.c_str());
 
-		if (lib == NULL)
-		{
-			size_t index = path.rfind("\\client\\");
-
-			// JRE path names switched from "client" to "server" directory.
-			if (index != std::string::npos)
-			{
-				path = path.replace(index, 8, "\\server\\");
-				lib = ::LoadLibraryA(path.c_str());
-			}
+			HMODULE lib = ::LoadLibraryA(path.c_str());
 
 			if (lib == NULL)
-				throw InitializationException("Could not load JVM library");
-		}
+			{
+				size_t index = path.rfind("\\client\\");
 
-		CreateVm_t JNI_CreateJavaVM = (CreateVm_t) ::GetProcAddress(lib, "JNI_CreateJavaVM");
+				// JRE path names switched from "client" to "server" directory.
+				if (index != std::string::npos)
+				{
+					path = path.replace(index, 8, "\\server\\");
+					lib = ::LoadLibraryA(path.c_str());
+				}
 
-		if (JNI_CreateJavaVM == NULL)
-		{
-			::FreeLibrary(lib);
-			throw InitializationException("Invalid JVM library");
-		}
+				if (lib == NULL)
+				{
+					isVm.store(false);
+					throw InitializationException("Could not load JVM library");
+				}
+			}
 
-		if (JNI_CreateJavaVM(&vm, (void**) &env, &args) != 0)
-		{
-			::FreeLibrary(lib);
-			throw InitializationException("Java Virtual Machine failed during creation");
-		}
+			CreateVm_t JNI_CreateJavaVM = (CreateVm_t) ::GetProcAddress(lib, "JNI_CreateJavaVM");
 
-		if (javaVm.compare_exchange_strong(expected, vm))
-		{
-			// Save the loaded DLL for later.
-			library = lib;
-		}
-		else
-		{
-			// We had a race condition... and lost.
-			::FreeLibrary(lib);
-			vm->DestroyJavaVM();
-			throw InitializationException("Java Virtual Machine already initialized");
-		}
+			if (JNI_CreateJavaVM == NULL || JNI_CreateJavaVM(&javaVm, (void**) &env, &args) != 0)
+			{
+				isVm.store(false);
+				::FreeLibrary(lib);
+				throw InitializationException("Java Virtual Machine failed during creation");
+			}
 
 #else
 # error Platform not yet supported
 #endif // _WIN32
+		}
 	}
 
 	Vm::~Vm()
 	{
-		// Concurrency issues are all sorted in constructor.
-		javaVm.load()->DestroyJavaVM();
-		javaVm = nullptr;
-
-#ifdef _WIN32
-		::FreeLibrary(HMODULE(library));
-#else
-# error "Platform not supported"
-#endif // _WIN32
-
-		library = nullptr;
+		/*
+			Note that you can't ever *really* unload the JavaVM. If you call
+			DestroyJavaVM(), you can't then call JNI_CreateJavaVM() again.
+			So, instead we just flag it as "gone".
+		 */
+		isVm.store(false);
 	}
 }
 
