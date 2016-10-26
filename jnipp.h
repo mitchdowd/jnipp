@@ -122,7 +122,7 @@ namespace jni
 			\return The method's return value.
 		 */
 		template <class TReturn, class... TArgs>
-		TReturn call(method_t method, TArgs... args) const {
+		TReturn call(method_t method, const TArgs&... args) const {
 			internal::ArgArray<TArgs...> transform(args...);
 			return callMethod<TReturn>(method, transform.values);
 		}
@@ -137,7 +137,7 @@ namespace jni
 			\return The method's return value.
 		 */
 		template <class TReturn, class... TArgs>
-		TReturn call(const char* name, TArgs... args) const {
+		TReturn call(const char* name, const TArgs&... args) const {
 			String sig = "(" + internal::sig(args...) + ")" + internal::valueSig((TReturn*) nullptr);
 			method_t method = Class(getClass()).getMethod(name, sig.c_str());
 			return call<TReturn>(method, args...);
@@ -259,7 +259,7 @@ namespace jni
 			\return The created instance.
 		 */
 		template <class... TArgs>
-		Object newInstance(TArgs... args) const {
+		Object newInstance(const TArgs&... args) const {
 			internal::ArgArray<TArgs...> transform(args...);
 			method_t constructor = getMethod("<init>", ("(" + internal::sig(args...) + ")V").c_str());
 			return newObject(constructor, transform.values);
@@ -349,7 +349,7 @@ namespace jni
 			\return The method's return value.
 		 */
 		template <class TReturn, class... TArgs>
-		TReturn call(method_t method, TArgs... args) const {
+		TReturn call(method_t method, const TArgs&... args) const {
 			internal::ArgArray<TArgs...> transform(args...);
 			return callStaticMethod<TReturn>(method, transform.values);
 		}
@@ -364,7 +364,7 @@ namespace jni
 			\return The method's return value.
 		 */
 		template <class TReturn, class... TArgs>
-		TReturn call(const char* name, TArgs... args) const {
+		TReturn call(const char* name, const TArgs&... args) const {
 			String sig = "(" + internal::sig(args...) + ")" + internal::valueSig((TReturn*) nullptr);
 			method_t method = getStaticMethod(name, sig.c_str());
 			return call<TReturn>(method, args...);
@@ -410,7 +410,7 @@ namespace jni
 			\return The method's return value.
 		 */
 		template <class TReturn, class... TArgs>
-		TReturn call(const Object& obj, method_t method, TArgs... args) const {
+		TReturn call(const Object& obj, method_t method, const TArgs&... args) const {
 			internal::ArgArray<TArgs...> transform(args...);
 			return callExactMethod<TReturn>(obj.getHandle(), method, transform.values);
 		}
@@ -426,7 +426,7 @@ namespace jni
 			\return The method's return value.
 		 */
 		template <class TReturn, class... TArgs>
-		TReturn call(const Object& obj, const char* name, TArgs... args) const {
+		TReturn call(const Object& obj, const char* name, const TArgs&... args) const {
 			String sig = "(" + internal::sig(args...) + ")" + internal::valueSig((TReturn*) nullptr);
 			method_t method = getMethod(name, sig.c_str());
 			return call<TReturn>(obj, method, args...);
@@ -511,6 +511,12 @@ namespace jni
 	 */
 	class InvocationException : public Exception
 	{
+	public:
+		/**
+			Constructor with an error message.
+			\param msg Message to pass to the Exception.
+		 */
+		InvocationException(const char* msg = "Java Exception detected") : Exception(msg) {}
 	};
 
 	/**

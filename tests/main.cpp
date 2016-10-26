@@ -216,6 +216,14 @@ TEST(Arg_longLong)
 	ASSERT(str == "123");
 }
 
+TEST(Arg_Object)
+{
+	jni::Object str = jni::Class("java/lang/String").newInstance("123");
+	int i = jni::Class("java/lang/Integer").call<int>("parseInt", str);
+
+	ASSERT(i == 123);
+}
+
 int main()
 {
 	// jni::Vm Tests
@@ -253,6 +261,7 @@ int main()
 		RUN_TEST(Arg_float);
 		RUN_TEST(Arg_int);
 		RUN_TEST(Arg_longLong);
+		RUN_TEST(Arg_Object);
 	}
 
 	std::cout << "Press a key to continue..." << std::endl;

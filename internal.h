@@ -23,12 +23,14 @@ namespace jni
 
 		template <class TArg>
 		std::string valueSig(const TArg*);
+		template <int n, class TArg>
+		inline std::string valueSig(const TArg (*)[n]) { return valueSig((const TArg* const*) 0); }
 
 		inline std::string sig() { return ""; }
 
 		template <class TArg, class... TArgs>
-		std::string sig(const TArg& arg, TArgs... args) {
-			return valueSig(&arg) + sig(args...);
+		std::string sig(const TArg& arg, const TArgs&... args) {
+			return valueSig((const TArg*) &arg) + sig(args...);
 		}
 
 		/*
@@ -36,13 +38,15 @@ namespace jni
 		 */
 
 		template <class TArg>
-		void valueArg(value_t* value, const TArg& arg);
+		void valueArg(value_t* value, const TArg* arg);
+		template <int n, class TArg>
+		inline void valueArg(value_t* value, const TArg (*arg)[n]) { valueArg(value, (const TArg* const*) &arg); }
 
 		inline void args(value_t*) {}
 
 		template <class TArg, class... TArgs>
-		void args(value_t* values, const TArg& arg, TArgs... args) {
-			valueArg(values, arg);
+		void args(value_t* values, const TArg& arg, const TArgs&... args) {
+			valueArg(values, &arg);
 			args(values + 1, args...);
 		}
 
@@ -63,7 +67,7 @@ namespace jni
 		class ArgArray
 		{
 		public:
-			ArgArray(TArgs... args) {
+			ArgArray(const TArgs&... args) {
 				std::memset(this, 0, sizeof(ArgArray<TArgs...>));
 				args(values, args...);
 			}

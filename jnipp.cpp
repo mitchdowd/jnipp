@@ -94,23 +94,34 @@ namespace jni
 	{
 		JNIEnv* env = jni::env();
 
-		if (env->ExceptionCheck() != JNI_FALSE)
+		jthrowable exception = env->ExceptionOccurred();
+
+		if (exception != NULL)
 		{
+			Object obj(exception, Object::Temporary);
+
 			env->ExceptionClear();
-			throw InvocationException();
+
+			String msg = obj.call<String>("toString");
+			throw InvocationException(msg.c_str());
 		}
 	}
 
 	static String toString(jobject handle, bool deleteLocal = true)
 	{
-		JNIEnv* env = jni::env();
+		String result;
 
-		const char* chars = env->GetStringUTFChars(jstring(handle), NULL);
-		String result(chars, env->GetStringUTFLength(jstring(handle)));
-		env->ReleaseStringUTFChars(jstring(handle), chars);
+		if (handle != NULL)
+		{
+			JNIEnv* env = jni::env();
 
-		if (deleteLocal)
-			env->DeleteLocalRef(handle);
+			const char* chars = env->GetStringUTFChars(jstring(handle), NULL);
+			result.assign(chars, env->GetStringUTFLength(jstring(handle)));
+			env->ReleaseStringUTFChars(jstring(handle), chars);
+
+			if (deleteLocal)
+				env->DeleteLocalRef(handle);
+		}
 
 		return result;
 	}
@@ -229,7 +240,7 @@ namespace jni
 
 	bool Object::isNull() const noexcept
 	{
-		return _handle == NULL;
+		return _handle == NULL || env()->IsSameObject(_handle, NULL);
 	}
 
 	template <>	bool Object::callMethod(method_t method, internal::value_t* args) const
