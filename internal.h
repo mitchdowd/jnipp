@@ -39,6 +39,9 @@ namespace jni
 		inline std::string valueSig(const wchar_t* const*)	{ return "Ljava/lang/String;"; }
 		std::string valueSig(const Object* obj);
 
+		template <int n, class TArg>
+		inline std::string valueSig(const TArg (*arg)[n]) { return valueSig((const TArg* const*) arg); }
+
 		inline std::string sig() { return ""; }
 
 		template <class TArg, class... TArgs>

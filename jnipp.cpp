@@ -59,7 +59,7 @@ namespace jni
 #ifdef __ANDROID__
 			if (vm->AttachCurrentThread(&_env, nullptr) != 0)
 #else
-			if (vm->AttachCurrentThread((void**) &_env, nullptr) != 0)
+				if (vm->AttachCurrentThread((void**) &_env, nullptr) != 0)
 #endif
 				throw InitializationException("Could not attach JNI to thread");
 
@@ -73,15 +73,15 @@ namespace jni
 
 #ifndef _WIN32
 
-	std::wstring toWString(const jchar* source, jsize length)
+	std::wstring toWString(const jchar* str, jsize length)
 	{
 		std::wstring result;
 
-		result.reserve(length * 2);
+		result.reserve(length);
 
-		for (size_t i = 0; i < length; ++i)
+		for (jsize i = 0; i < length; ++i)
 		{
-			wchar_t ch = source[i];
+			wchar_t ch = str[i];
 
 			// Check for a two-segment character.
 			if (ch >= wchar_t(0xD800) && ch <= wchar_t(0xDBFF)) {
@@ -90,10 +90,35 @@ namespace jni
 
 				// Create a single, 32-bit character.
 				ch = (ch - wchar_t(0xD800)) << 10;
-				ch += source[i++] - wchar_t(0xDC00 + 0x10000);
+				ch += str[i++] - wchar_t(0x1DC00);
 			}
 
 			result += ch;
+		}
+
+		return result;
+	}
+
+	std::basic_string<jchar> toJString(const wchar_t* str, size_t length)
+	{
+		std::basic_string<jchar> result;
+
+		result.reserve(length * 2);	// Worst case scenario.
+
+		for (size_t i = 0; i < length; ++i)
+		{
+			wchar_t ch = str[i];
+
+			// Check for multi-byte UTF-16 character.
+			if (ch > wchar_t(0xFFFF)) {
+				ch -= uint32_t(0x10000);
+
+				// Add the first of the two-segment character.
+				result += jchar(0xD800 + (ch >> 10));
+				ch = wchar_t(0xDC00) + (ch & 0x03FF);
+			}
+
+			result += jchar(ch);
 		}
 
 		return result;
@@ -199,7 +224,7 @@ namespace jni
 		Object Implementation
 	 */
 
-	Object::Object() noexcept : _handle(NULL), _class(NULL), _isGlobal(false) 
+	Object::Object() noexcept : _handle(NULL), _class(NULL), _isGlobal(false)
 	{
 	}
 
@@ -450,13 +475,18 @@ namespace jni
 		env->DeleteLocalRef(handle);
 	}
 
-#ifdef _WIN32
+
 
 	template <> void Object::set(field_t field, const std::wstring& value)
 	{
 		JNIEnv* env = jni::env();
 
+#ifdef _WIN32
 		jobject handle = env->NewString((const jchar*) value.c_str(), jsize(value.length()));
+#else
+        auto jstr = toJString(value.c_str(), value.length());
+		jobject handle = env->NewString(jstr.c_str(), jsize(jstr.length()));
+#endif
 		env->SetObjectField(_handle, field, handle);
 		env->DeleteLocalRef(handle);
 	}
@@ -464,15 +494,15 @@ namespace jni
 	template <> void Object::set(field_t field, const wchar_t* const& value)
 	{
 		JNIEnv* env = jni::env();
-
+#ifdef _WIN32
 		jobject handle = env->NewString((const jchar*) value, jsize(std::wcslen(value)));
+#else
+        auto jstr = toJString(value, std::wcslen(value));
+		jobject handle = env->NewString(jstr.c_str(), jsize(jstr.length()));
+#endif
 		env->SetObjectField(_handle, field, handle);
 		env->DeleteLocalRef(handle);
 	}
-
-#else
-# error "utf32"
-#endif
 
 	template <> void Object::set(field_t field, const char* const& value)
 	{
@@ -794,20 +824,21 @@ namespace jni
 		return toWString(env()->GetStaticObjectField(jclass(getHandle()), field));
 	}
 
-#ifdef _WIN32
+
 
 	template <> void Class::set(field_t field, const std::wstring& value)
 	{
 		JNIEnv* env = jni::env();
 
+#ifdef _WIN32
 		jobject handle = env->NewString((const jchar*) value.c_str(), jsize(value.length()));
+#else
+        auto jstr = toJString(value.c_str(), value.length());
+		jobject handle = env->NewString(jstr.c_str(), jsize(jstr.length()));
+#endif
 		env->SetStaticObjectField(jclass(getHandle()), field, handle);
 		env->DeleteLocalRef(handle);
 	}
-
-#else
-# error "utf32"
-#endif
 
 	Object Class::newObject(method_t constructor, internal::value_t* args) const
 	{

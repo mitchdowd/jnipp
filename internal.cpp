@@ -9,6 +9,10 @@ namespace jni
 	// Forward Declarations
 	JNIEnv* env();
 
+#ifndef _WIN32
+    extern std::basic_string<jchar> toJString(const wchar_t* str, size_t length);
+#endif
+
 	namespace internal
 	{
 		// Base Type Conversions
@@ -25,14 +29,13 @@ namespace jni
 		/*
 			Object Implementations
 		 */
-
 		std::string valueSig(const Object* obj)
 		{
 			if (obj == nullptr || obj->isNull())
 				return "Ljava/lang/Object;";	// One can always hope...
 
 			std::string name = Class(obj->getClass(), Object::Temporary).getName();
-			
+
 			// Change from "java.lang.Object" format to "java/lang/Object";
 			for (size_t i = 0; i < name.length(); ++i)
 				if (name[i] == '.')
@@ -77,7 +80,19 @@ namespace jni
 			((jvalue*) v)->l = env()->NewString((const jchar*) a, jsize(std::wcslen(a)));
 		}
 #else
-# error "32-bit character support not yet implemented"
+
+		void valueArg(value_t* v, const std::wstring& a)
+		{
+			auto jstr = toJString(a.c_str(), a.length());
+			((jvalue*) v)->l = env()->NewString(jstr.c_str(), jsize(jstr.length()));
+		}
+
+		void valueArg(value_t* v, const wchar_t* a)
+		{
+			auto jstr = toJString(a, std::wcslen(a));
+			((jvalue*) v)->l = env()->NewString(jstr.c_str(), jsize(jstr.length()));
+		}
+
 #endif
 
 		template <> void cleanupArg<const std::wstring*>(value_t* v)
