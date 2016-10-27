@@ -9,6 +9,9 @@
 
 namespace jni
 {
+	// Foward Declarations
+	class Object;
+
 	/**
 		This namespace is for messy implementation details only. It is not a part
 		of the external API and is subject to change at any time. It is only in a
@@ -24,8 +27,20 @@ namespace jni
 			Signature Generation
 		 */
 
-		template <class TArg>
-		std::string valueSig(const TArg*);
+		inline std::string valueSig(const void*)			{ return "V"; }
+		inline std::string valueSig(const bool*)			{ return "Z"; }
+		inline std::string valueSig(const wchar_t*)			{ return "C"; }
+		inline std::string valueSig(const short*)			{ return "S"; }
+		inline std::string valueSig(const int*)				{ return "I"; }
+		inline std::string valueSig(const long long*)		{ return "J"; }
+		inline std::string valueSig(const float*)			{ return "F"; }
+		inline std::string valueSig(const double*)			{ return "D"; }
+		inline std::string valueSig(const std::string*)		{ return "Ljava/lang/String;"; }
+		inline std::string valueSig(const std::wstring*)	{ return "Ljava/lang/String;"; }
+		inline std::string valueSig(const char* const*)		{ return "Ljava/lang/String;"; }
+		inline std::string valueSig(const wchar_t* const*)	{ return "Ljava/lang/String;"; }
+		std::string valueSig(const Object* obj);
+
 		template <int n, class TArg>
 		inline std::string valueSig(const TArg (*)[n]) {
 			return valueSig((const TArg* const*) 0);
@@ -42,18 +57,25 @@ namespace jni
 			Argument Conversion
 		 */
 
-		template <class TArg>
-		void valueArg(value_t* value, const TArg* arg);
-		template <int n, class TArg>
-		inline void valueArg(value_t* value, const TArg (*arg)[n]) { 
-			valueArg(value, (const TArg* const*) &arg); 
-		}
+		void valueArg(value_t* v, bool a);
+		void valueArg(value_t* v, wchar_t a);
+		void valueArg(value_t* v, short a);
+		void valueArg(value_t* v, int a);
+		void valueArg(value_t* v, long long a);
+		void valueArg(value_t* v, float a);
+		void valueArg(value_t* v, double a);
+		void valueArg(value_t* v, jobject a);
+		void valueArg(value_t* v, const Object& a);
+		void valueArg(value_t* v, const std::string& a);
+		void valueArg(value_t* v, const char* a);
+		void valueArg(value_t* v, const std::wstring& a);
+		void valueArg(value_t* v, const wchar_t* a);
 
 		inline void args(value_t*) {}
 
 		template <class TArg, class... TArgs>
 		void args(value_t* values, const TArg& arg, const TArgs&... args) {
-			valueArg(values, &arg);
+			valueArg(values, arg);
 			internal::args(values + 1, args...);
 		}
 

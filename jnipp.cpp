@@ -3,8 +3,6 @@
 
   // Windows Dependencies
 # include <windows.h>
-#else
-# error "Platform not supported"
 #endif
 
 // External Dependencies

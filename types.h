@@ -2,8 +2,7 @@
 #define _JNIPP_TYPES_H_ 1
 
 // Standard Dependencies
-#include <stdexcept>
-#include <string>
+#include <stdexcept>		// For std::runtime_error
 
 // Forward Declarations
 struct JNIEnv_;

@@ -11,35 +11,21 @@ namespace jni
 
 	namespace internal
 	{
-		// Base Type Signatures
-		template <> std::string valueSig(const void*)			{ return "V"; }
-		template <> std::string valueSig(const bool*)			{ return "Z"; }
-		template <> std::string valueSig(const wchar_t*)		{ return "C"; }
-		template <> std::string valueSig(const short*)			{ return "S"; }
-		template <> std::string valueSig(const int*)			{ return "I"; }
-		template <> std::string valueSig(const long long*)		{ return "J"; }
-		template <> std::string valueSig(const float*)			{ return "F"; }
-		template <> std::string valueSig(const double*)			{ return "D"; }
-		template <> std::string valueSig(const std::string*)	{ return "Ljava/lang/String;"; }
-		template <> std::string valueSig(const std::wstring*)	{ return "Ljava/lang/String;"; }
-		template <> std::string valueSig(const char* const*)	{ return "Ljava/lang/String;"; }
-		template <> std::string valueSig(const wchar_t* const*)	{ return "Ljava/lang/String;"; }
-
 		// Base Type Conversions
-		template <> void valueArg(value_t* v, const bool* a)		{ ((jvalue*) v)->z = *a; }
-		template <> void valueArg(value_t* v, const wchar_t* a)		{ ((jvalue*) v)->c = *a; }
-		template <> void valueArg(value_t* v, const short* a)		{ ((jvalue*) v)->s = *a; }
-		template <> void valueArg(value_t* v, const int* a)			{ ((jvalue*) v)->i = *a; }
-		template <> void valueArg(value_t* v, const long long* a)	{ ((jvalue*) v)->j = *a; }
-		template <> void valueArg(value_t* v, const float* a)		{ ((jvalue*) v)->f = *a; }
-		template <> void valueArg(value_t* v, const double* a)		{ ((jvalue*) v)->d = *a; }
-		template <> void valueArg(value_t* v, const jobject* a)		{ ((jvalue*) v)->l = *a; }
-		template <> void valueArg(value_t* v, const Object* a)		{ ((jvalue*) v)->l = a->getHandle(); }
+		void valueArg(value_t* v, bool a)			{ ((jvalue*) v)->z = a; }
+		void valueArg(value_t* v, wchar_t a)		{ ((jvalue*) v)->c = a; }
+		void valueArg(value_t* v, short a)			{ ((jvalue*) v)->s = a; }
+		void valueArg(value_t* v, int a)			{ ((jvalue*) v)->i = a; }
+		void valueArg(value_t* v, long long a)		{ ((jvalue*) v)->j = a; }
+		void valueArg(value_t* v, float a)			{ ((jvalue*) v)->f = a; }
+		void valueArg(value_t* v, double a)			{ ((jvalue*) v)->d = a; }
+		void valueArg(value_t* v, jobject a)		{ ((jvalue*) v)->l = a; }
+		void valueArg(value_t* v, const Object& a)	{ ((jvalue*) v)->l = a.getHandle(); }
 
 		/*
 			Object Implementations
 		 */
-		template <> std::string valueSig(const Object* obj)
+		std::string valueSig(const Object* obj)
 		{
 			if (obj == nullptr || obj->isNull())
 				return "Ljava/lang/Object;";	// One can always hope...
@@ -58,9 +44,9 @@ namespace jni
 			String Implementations
 		 */
 
-		template <> void valueArg(value_t* v, const std::string* a)
+		void valueArg(value_t* v, const std::string& a)
 		{
-			((jvalue*) v)->l = env()->NewStringUTF(a->c_str());
+			((jvalue*) v)->l = env()->NewStringUTF(a.c_str());
 		}
 
 		template <> void cleanupArg<std::string>(value_t* v)
@@ -68,9 +54,9 @@ namespace jni
 			env()->DeleteLocalRef(((jvalue*) v)->l);
 		}
 
-		template <> void valueArg(value_t* v, const char* const* a)
+		void valueArg(value_t* v, const char* a)
 		{
-			((jvalue*) v)->l = env()->NewStringUTF(*a);
+			((jvalue*) v)->l = env()->NewStringUTF(a);
 		}
 
 		template <> void cleanupArg<const char*>(value_t* v)
@@ -80,14 +66,14 @@ namespace jni
 
 #ifdef _WIN32
 
-		template <> void valueArg(value_t* v, const std::wstring* a)
+		void valueArg(value_t* v, const std::wstring& a)
 		{
-			((jvalue*)v)->l = env()->NewString((const jchar*) a->c_str(), jsize(a->length()));
+			((jvalue*)v)->l = env()->NewString((const jchar*) a.c_str(), jsize(a.length()));
 		}
 
-		template <> void valueArg(value_t* v, const wchar_t* const* a)
+		void valueArg(value_t* v, const wchar_t* a)
 		{
-			((jvalue*) v)->l = env()->NewString((const jchar*) *a, jsize(std::wcslen(*a)));
+			((jvalue*) v)->l = env()->NewString((const jchar*) a, jsize(std::wcslen(a)));
 		}
 #else
 # error "32-bit character support not yet implemented"
