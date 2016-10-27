@@ -24,7 +24,9 @@ namespace jni
 		template <class TArg>
 		std::string valueSig(const TArg*);
 		template <int n, class TArg>
-		inline std::string valueSig(const TArg (*)[n]) { return valueSig((const TArg* const*) 0); }
+		inline std::string valueSig(const TArg (*)[n]) {
+			return valueSig((const TArg* const*) 0);
+		}
 
 		inline std::string sig() { return ""; }
 
@@ -40,7 +42,9 @@ namespace jni
 		template <class TArg>
 		void valueArg(value_t* value, const TArg* arg);
 		template <int n, class TArg>
-		inline void valueArg(value_t* value, const TArg (*arg)[n]) { valueArg(value, (const TArg* const*) &arg); }
+		inline void valueArg(value_t* value, const TArg (*arg)[n]) { 
+			valueArg(value, (const TArg* const*) &arg); 
+		}
 
 		inline void args(value_t*) {}
 
@@ -51,7 +55,8 @@ namespace jni
 		}
 
 		template <class TArg> void cleanupArg(value_t* value) {}
-		template <> void cleanupArg<String>(value_t* value);
+		template <> void cleanupArg<std::string>(value_t* value);
+		template <> void cleanupArg<std::wstring>(value_t* value);
 		template <> void cleanupArg<const char*>(value_t* value);
 		template <> void cleanupArg<const wchar_t*>(value_t* value);
 

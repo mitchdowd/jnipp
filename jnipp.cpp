@@ -12,7 +12,6 @@
 
 // Standard Dependencies
 #include <atomic>
-#include <codecvt>
 #include <string>
 
 // Local Dependencies
@@ -102,14 +101,13 @@ namespace jni
 
 			env->ExceptionClear();
 
-			String msg = obj.call<String>("toString");
-			throw InvocationException(msg.c_str());
+			throw InvocationException(obj.call<std::string>("toString").c_str());
 		}
 	}
 
-	static String toString(jobject handle, bool deleteLocal = true)
+	static std::string toString(jobject handle, bool deleteLocal = true)
 	{
-		String result;
+		std::string result;
 
 		if (handle != NULL)
 		{
@@ -125,6 +123,29 @@ namespace jni
 
 		return result;
 	}
+
+#ifdef _WIN32
+	static std::wstring toWString(jobject handle, bool deleteLocal = true)
+	{
+		std::wstring result;
+
+		if (handle != NULL)
+		{
+			JNIEnv* env = jni::env();
+
+			const jchar* chars = env->GetStringChars(jstring(handle), NULL);
+			result.assign((const wchar_t*) chars, env->GetStringLength(jstring(handle)));
+			env->ReleaseStringChars(jstring(handle), chars);
+
+			if (deleteLocal)
+				env->DeleteLocalRef(handle);
+		}
+
+		return result;
+	}
+#else
+# error "utf32"
+#endif
 
 	/*
 		Stand-alone Function Impelementations
@@ -362,19 +383,32 @@ namespace jni
 		env()->SetDoubleField(_handle, field, value);
 	}
 
-	template <>	String Object::callMethod(method_t method, internal::value_t* args) const
+	template <>	std::string Object::callMethod(method_t method, internal::value_t* args) const
 	{
 		auto result = env()->CallObjectMethodA(_handle, method, (jvalue*) args);
 		handleJavaExceptions();
 		return toString(result);
 	}
 
-	template <> String Object::get(field_t field) const
+	template <>	std::wstring Object::callMethod(method_t method, internal::value_t* args) const
+	{
+		auto result = env()->CallObjectMethodA(_handle, method, (jvalue*) args);
+		handleJavaExceptions();
+		return toWString(result);
+	}
+
+	template <> std::string Object::get(field_t field) const
 	{
 		return toString(env()->GetObjectField(_handle, field));
 	}
 
-	template <> void Object::set(field_t field, const String& value)
+	template <> std::wstring Object::get(field_t field) const
+	{
+		return toWString(env()->GetObjectField(_handle, field));
+	}
+
+
+	template <> void Object::set(field_t field, const std::string& value)
 	{
 		JNIEnv* env = jni::env();
 
@@ -383,11 +417,12 @@ namespace jni
 		env->DeleteLocalRef(handle);
 	}
 
-	template <> void Object::set(field_t field, const char* const& value)
+#ifdef _WIN32
+	template <> void Object::set(field_t field, const std::wstring& value)
 	{
 		JNIEnv* env = jni::env();
 
-		jobject handle = env->NewStringUTF(value);
+		jobject handle = env->NewString((const jchar*) value.c_str(), jsize(value.length()));
 		env->SetObjectField(_handle, field, handle);
 		env->DeleteLocalRef(handle);
 	}
@@ -396,11 +431,19 @@ namespace jni
 	{
 		JNIEnv* env = jni::env();
 
-		// Convert to UTF-8 first.
-		std::wstring_convert<std::codecvt_utf8<wchar_t>> cvt;
-		std::string bytes = cvt.to_bytes(value);
+		jobject handle = env->NewString((const jchar*) value, jsize(std::wcslen(value)));
+		env->SetObjectField(_handle, field, handle);
+		env->DeleteLocalRef(handle);
+	}
+#else
+# error "utf32"
+#endif
 
-		jobject handle = env->NewStringUTF(bytes.c_str());
+	template <> void Object::set(field_t field, const char* const& value)
+	{
+		JNIEnv* env = jni::env();
+
+		jobject handle = env->NewStringUTF(value);
 		env->SetObjectField(_handle, field, handle);
 		env->DeleteLocalRef(handle);
 	}
@@ -486,9 +529,9 @@ namespace jni
 		return Class(env()->GetSuperclass(jclass(getHandle())), DeleteLocalInput);
 	}
 
-	String Class::getName() const
+	std::string Class::getName() const
 	{
-		return Object::call<String>("getName");
+		return Object::call<std::string>("getName");
 	}
 
 	template <>	bool Class::callStaticMethod(method_t method, internal::value_t* args) const
@@ -659,26 +702,26 @@ namespace jni
 		env()->SetStaticDoubleField(jclass(getHandle()), field, value);
 	}
 
-	template <>	String Class::callStaticMethod(method_t method, internal::value_t* args) const
+	template <>	std::string Class::callStaticMethod(method_t method, internal::value_t* args) const
 	{
 		auto result = env()->CallStaticObjectMethodA(jclass(getHandle()), method, (jvalue*) args);
 		handleJavaExceptions();
 		return toString(result);
 	}
 
-	template <>	String Class::callExactMethod(jobject obj, method_t method, internal::value_t* args) const
+	template <>	std::string Class::callExactMethod(jobject obj, method_t method, internal::value_t* args) const
 	{
 		auto result = env()->CallNonvirtualObjectMethodA(obj, jclass(getHandle()), method, (jvalue*)args);
 		handleJavaExceptions();
 		return toString(result);
 	}
 
-	template <> String Class::get(field_t field) const
+	template <> std::string Class::get(field_t field) const
 	{
 		return toString(env()->GetStaticObjectField(jclass(getHandle()), field));
 	}
 
-	template <> void Class::set(field_t field, const String& value)
+	template <> void Class::set(field_t field, const std::string& value)
 	{
 		JNIEnv* env = jni::env();
 
@@ -686,6 +729,40 @@ namespace jni
 		env->SetStaticObjectField(jclass(getHandle()), field, handle);
 		env->DeleteLocalRef(handle);
 	}
+
+	template <>	std::wstring Class::callStaticMethod(method_t method, internal::value_t* args) const
+	{
+		auto result = env()->CallStaticObjectMethodA(jclass(getHandle()), method, (jvalue*) args);
+		handleJavaExceptions();
+		return toWString(result);
+	}
+
+	template <>	std::wstring Class::callExactMethod(jobject obj, method_t method, internal::value_t* args) const
+	{
+		auto result = env()->CallNonvirtualObjectMethodA(obj, jclass(getHandle()), method, (jvalue*)args);
+		handleJavaExceptions();
+		return toWString(result);
+	}
+
+	template <> std::wstring Class::get(field_t field) const
+	{
+		return toWString(env()->GetStaticObjectField(jclass(getHandle()), field));
+	}
+
+#ifdef _WIN32
+
+	template <> void Class::set(field_t field, const std::wstring& value)
+	{
+		JNIEnv* env = jni::env();
+
+		jobject handle = env->NewString((const jchar*) value.c_str(), jsize(value.length()));
+		env->SetStaticObjectField(jclass(getHandle()), field, handle);
+		env->DeleteLocalRef(handle);
+	}
+
+#else
+# error "utf32"
+#endif
 
 	Object Class::newObject(method_t constructor, internal::value_t* args) const
 	{

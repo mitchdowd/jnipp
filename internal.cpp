@@ -23,7 +23,8 @@ namespace jni
 		template <> std::string valueSig(const long long*)		{ return "J"; }
 		template <> std::string valueSig(const float*)			{ return "F"; }
 		template <> std::string valueSig(const double*)			{ return "D"; }
-		template <> std::string valueSig(const String*)			{ return "Ljava/lang/String;"; }
+		template <> std::string valueSig(const std::string*)	{ return "Ljava/lang/String;"; }
+		template <> std::string valueSig(const std::wstring*)	{ return "Ljava/lang/String;"; }
 		template <> std::string valueSig(const char* const*)	{ return "Ljava/lang/String;"; }
 		template <> std::string valueSig(const wchar_t* const*)	{ return "Ljava/lang/String;"; }
 
@@ -46,7 +47,7 @@ namespace jni
 			if (obj == nullptr || obj->isNull())
 				return "Ljava/lang/Object;";	// One can always hope...
 
-			String name = Class(obj->getClass(), Object::Temporary).getName();
+			std::string name = Class(obj->getClass(), Object::Temporary).getName();
 			
 			// Change from "java.lang.Object" format to "java/lang/Object";
 			for (size_t i = 0; i < name.length(); ++i)
@@ -60,12 +61,12 @@ namespace jni
 			String Implementations
 		 */
 
-		template <> void valueArg(value_t* v, const String* a)
+		template <> void valueArg(value_t* v, const std::string* a)
 		{
 			((jvalue*) v)->l = env()->NewStringUTF(a->c_str());
 		}
 
-		template <> void cleanupArg<String>(value_t* v)
+		template <> void cleanupArg<std::string>(value_t* v)
 		{
 			env()->DeleteLocalRef(((jvalue*) v)->l);
 		}
@@ -80,19 +81,30 @@ namespace jni
 			env()->DeleteLocalRef(((jvalue*) v)->l);
 		}
 
+#ifdef _WIN32
+
+		template <> void valueArg(value_t* v, const std::wstring* a)
+		{
+			((jvalue*)v)->l = env()->NewString((const jchar*) a->c_str(), jsize(a->length()));
+		}
+
 		template <> void valueArg(value_t* v, const wchar_t* const* a)
 		{
-			// Convert to UTF-8 first.
-			std::wstring_convert<std::codecvt_utf8<wchar_t>> cvt;
-			std::string bytes = cvt.to_bytes(*a);
+			((jvalue*) v)->l = env()->NewString((const jchar*) *a, jsize(std::wcslen(*a)));
+		}
 
-			((jvalue*) v)->l = env()->NewStringUTF(bytes.c_str());
+		template <> void cleanupArg<const std::wstring*>(value_t* v)
+		{
+			env()->DeleteLocalRef(((jvalue*) v)->l);
 		}
 
 		template <> void cleanupArg<const wchar_t*>(value_t* v)
 		{
 			env()->DeleteLocalRef(((jvalue*) v)->l);
 		}
+#else
+# error "32-bit character support not yet implemented"
+#endif
 	}
 }
 

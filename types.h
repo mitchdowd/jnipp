@@ -38,13 +38,6 @@ namespace jni
 	typedef _jfieldID* field_t;
 
 	/**
-		The String type used. Change it to your own string base class, but it
-		must be able to be concatenated using `operator+` and have a `c_str()`
-		member function that casts to a null-terminated `const char*`.
-	*/
-	typedef std::string String;
-
-	/**
 		Base class for thrown Exceptions. Change it to whatever your chosen
 		Exception class, as long as that class has a `const char*` constructor.
 	*/

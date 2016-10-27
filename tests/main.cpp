@@ -176,42 +176,42 @@ TEST(Object_call_byNameWithArgs)
 
 TEST(Arg_bool)
 {
-	jni::String str = jni::Class("java/lang/String").call<jni::String>("valueOf", true);
+	std::string str = jni::Class("java/lang/String").call<std::string>("valueOf", true);
 
 	ASSERT(str == "true");
 }
 
 TEST(Arg_wchar)
 {
-	jni::String str = jni::Class("java/lang/String").call<jni::String>("valueOf", L'X');
+	std::string str = jni::Class("java/lang/String").call<std::string>("valueOf", L'X');
 
 	ASSERT(str == "X");
 }
 
 TEST(Arg_double)
 {
-	jni::String str = jni::Class("java/lang/String").call<jni::String>("valueOf", 123.0);
+	std::string str = jni::Class("java/lang/String").call<std::string>("valueOf", 123.0);
 
 	ASSERT(str == "123.0");
 }
 
 TEST(Arg_float)
 {
-	jni::String str = jni::Class("java/lang/String").call<jni::String>("valueOf", 123.0f);
+	std::string str = jni::Class("java/lang/String").call<std::string>("valueOf", 123.0f);
 
 	ASSERT(str == "123.0");
 }
 
 TEST(Arg_int)
 {
-	jni::String str = jni::Class("java/lang/String").call<jni::String>("valueOf", 123);
+	std::string str = jni::Class("java/lang/String").call<std::string>("valueOf", 123);
 
 	ASSERT(str == "123");
 }
 
 TEST(Arg_longLong)
 {
-	jni::String str = jni::Class("java/lang/String").call<jni::String>("valueOf", 123LL);
+	std::string str = jni::Class("java/lang/String").call<std::string>("valueOf", 123LL);
 
 	ASSERT(str == "123");
 }

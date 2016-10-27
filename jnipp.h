@@ -138,7 +138,7 @@ namespace jni
 		 */
 		template <class TReturn, class... TArgs>
 		TReturn call(const char* name, const TArgs&... args) const {
-			String sig = "(" + internal::sig(args...) + ")" + internal::valueSig((TReturn*) nullptr);
+			std::string sig = "(" + internal::sig(args...) + ")" + internal::valueSig((TReturn*) nullptr);
 			method_t method = Class(getClass()).getMethod(name, sig.c_str());
 			return call<TReturn>(method, args...);
 		}
@@ -315,7 +315,7 @@ namespace jni
 			Gets the JNI-qualified name of this Class.
 			\return The Class name.
 		 */
-		String getName() const;
+		std::string getName() const;
 
 		/**
 			Calls a static method on this Class. The method should have no
@@ -365,7 +365,7 @@ namespace jni
 		 */
 		template <class TReturn, class... TArgs>
 		TReturn call(const char* name, const TArgs&... args) const {
-			String sig = "(" + internal::sig(args...) + ")" + internal::valueSig((TReturn*) nullptr);
+			std::string sig = "(" + internal::sig(args...) + ")" + internal::valueSig((TReturn*) nullptr);
 			method_t method = getStaticMethod(name, sig.c_str());
 			return call<TReturn>(method, args...);
 		}
