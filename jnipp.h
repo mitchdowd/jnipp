@@ -109,7 +109,7 @@ namespace jni
 		 */
 		template <class TReturn>
 		TReturn call(const char* name) const {
-			method_t method = Class(getClass()).getMethod(name, ("()" + internal::valueSig((TReturn*) nullptr)).c_str());
+			method_t method = getMethod(name, ("()" + internal::valueSig((TReturn*) nullptr)).c_str());
 			return call<TReturn>(method);
 		}
 
@@ -139,7 +139,7 @@ namespace jni
 		template <class TReturn, class... TArgs>
 		TReturn call(const char* name, const TArgs&... args) const {
 			std::string sig = "(" + internal::sig(args...) + ")" + internal::valueSig((TReturn*) nullptr);
-			method_t method = Class(getClass()).getMethod(name, sig.c_str());
+			method_t method = getMethod(name, sig.c_str());
 			return call<TReturn>(method, args...);
 		}
 
@@ -162,7 +162,7 @@ namespace jni
 		 */
 		template <class TType>
 		TType get(const char* name) const {
-			field_t field = Class(getClass()).getField(name, internal::valueSig((TType*) nullptr).c_str());
+			field_t field = getField(name, internal::valueSig((TType*) nullptr).c_str());
 			return get<TType>(field);
 		}
 
@@ -185,7 +185,7 @@ namespace jni
 		 */
 		template <class TType>
 		void set(const char* name, const TType& value) {
-			field_t field = Class(getClass()).getField(name, internal::valueSig((TType*) nullptr).c_str());
+			field_t field = getField(name, internal::valueSig((TType*) nullptr).c_str());
 			set(field, value);
 		}
 
@@ -209,6 +209,8 @@ namespace jni
 
 	private:
 		// Helper Functions
+		method_t getMethod(const char* name, const char* signature) const;
+		field_t getField(const char* name, const char* signature) const;
 		template <class TType> TType callMethod(method_t method, internal::value_t* values) const;
 
 		// Instance Variables
@@ -427,7 +429,7 @@ namespace jni
 		 */
 		template <class TReturn, class... TArgs>
 		TReturn call(const Object& obj, const char* name, const TArgs&... args) const {
-			String sig = "(" + internal::sig(args...) + ")" + internal::valueSig((TReturn*) nullptr);
+			std::string sig = "(" + internal::sig(args...) + ")" + internal::valueSig((TReturn*) nullptr);
 			method_t method = getMethod(name, sig.c_str());
 			return call<TReturn>(obj, method, args...);
 		}

@@ -1,9 +1,6 @@
 // External Dependencies
 #include <jni.h>
 
-// Standard Dependencies
-#include <codecvt>
-
 // Local Dependencies
 #include "jnipp.h"
 
@@ -92,19 +89,19 @@ namespace jni
 		{
 			((jvalue*) v)->l = env()->NewString((const jchar*) *a, jsize(std::wcslen(*a)));
 		}
+#else
+# error "32-bit character support not yet implemented"
+#endif
 
 		template <> void cleanupArg<const std::wstring*>(value_t* v)
 		{
-			env()->DeleteLocalRef(((jvalue*) v)->l);
+			env()->DeleteLocalRef(((jvalue*)v)->l);
 		}
 
 		template <> void cleanupArg<const wchar_t*>(value_t* v)
 		{
-			env()->DeleteLocalRef(((jvalue*) v)->l);
+			env()->DeleteLocalRef(((jvalue*)v)->l);
 		}
-#else
-# error "32-bit character support not yet implemented"
-#endif
 	}
 }
 

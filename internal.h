@@ -1,6 +1,9 @@
 #ifndef _JNIPP_INTERNAL_H_
 #define _JNIPP_INTERNAL_H_ 1
 
+// Standard Dependencies
+#include <cstring>
+
 // Local Dependencies
 #include "types.h"
 
@@ -51,7 +54,7 @@ namespace jni
 		template <class TArg, class... TArgs>
 		void args(value_t* values, const TArg& arg, const TArgs&... args) {
 			valueArg(values, &arg);
-			args(values + 1, args...);
+			internal::args(values + 1, args...);
 		}
 
 		template <class TArg> void cleanupArg(value_t* value) {}
@@ -74,7 +77,7 @@ namespace jni
 		public:
 			ArgArray(const TArgs&... args) {
 				std::memset(this, 0, sizeof(ArgArray<TArgs...>));
-				args(values, args...);
+				internal::args(values, args...);
 			}
 
 			~ArgArray() {

@@ -2,11 +2,12 @@
 #define _JNIPP_TYPES_H_ 1
 
 // Standard Dependencies
-#include <exception>
+#include <stdexcept>
 #include <string>
 
 // Forward Declarations
 struct JNIEnv_;
+struct _JNIEnv;
 struct _jmethodID;
 struct _jfieldID;
 class  _jobject;
@@ -15,7 +16,11 @@ class  _jclass;
 namespace jni
 {
 	// JNI Base Types
+#ifdef __ANDROID__
+	typedef _JNIEnv		JNIEnv;
+#else
 	typedef JNIEnv_		JNIEnv;
+#endif
 	typedef _jobject*	jobject;
 	typedef _jclass*	jclass;
 
@@ -41,7 +46,7 @@ namespace jni
 		Base class for thrown Exceptions. Change it to whatever your chosen
 		Exception class, as long as that class has a `const char*` constructor.
 	*/
-	typedef std::exception Exception;
+	typedef std::runtime_error Exception;
 }
 
 #endif // _JNIPP_TYPES_H_

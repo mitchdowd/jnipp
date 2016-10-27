@@ -20,8 +20,8 @@
 namespace jni
 {
 	// Static Variables
-	static std::atomic_bool isVm = false;
-	static JavaVM* javaVm        = nullptr;
+	static std::atomic_bool isVm(false);
+	static JavaVM* javaVm = nullptr;
 
 	/**
 		Maintains the lifecycle of a JNIEnv.
@@ -58,7 +58,11 @@ namespace jni
 
 		if (vm->GetEnv((void**) &_env, JNI_VERSION_1_2) != JNI_OK)
 		{
+#ifdef __ANDROID__
+			if (vm->AttachCurrentThread(&_env, nullptr) != 0)
+#else
 			if (vm->AttachCurrentThread((void**) &_env, nullptr) != 0)
+#endif
 				throw InitializationException("Could not attach JNI to thread");
 
 			_attached = true;
@@ -460,6 +464,16 @@ namespace jni
 		}
 
 		return _class;
+	}
+
+	method_t Object::getMethod(const char* name, const char* signature) const
+	{
+		return Class(getClass(), Temporary).getMethod(name, signature);
+	}
+
+	field_t Object::getField(const char* name, const char* signature) const
+	{
+		return Class(getClass(), Temporary).getField(name, signature);
 	}
 
 	/*
