@@ -21,8 +21,6 @@ namespace jni
 	 */
 	namespace internal
 	{
-		typedef long long value_t;
-
 		/*
 			Signature Generation
 		 */
@@ -41,21 +39,18 @@ namespace jni
 		inline std::string valueSig(const wchar_t* const*)	{ return "Ljava/lang/String;"; }
 		std::string valueSig(const Object* obj);
 
-		template <int n, class TArg>
-		inline std::string valueSig(const TArg (*)[n]) {
-			return valueSig((const TArg* const*) 0);
-		}
-
 		inline std::string sig() { return ""; }
 
 		template <class TArg, class... TArgs>
 		std::string sig(const TArg& arg, const TArgs&... args) {
-			return valueSig((const TArg*) &arg) + sig(args...);
+			return valueSig(&arg) + sig(args...);
 		}
 
 		/*
 			Argument Conversion
 		 */
+
+		typedef long long value_t;
 
 		void valueArg(value_t* v, bool a);
 		void valueArg(value_t* v, wchar_t a);
@@ -79,11 +74,11 @@ namespace jni
 			internal::args(values + 1, args...);
 		}
 
-		template <class TArg> void cleanupArg(value_t* value) {}
-		template <> void cleanupArg<std::string>(value_t* value);
-		template <> void cleanupArg<std::wstring>(value_t* value);
-		template <> void cleanupArg<const char*>(value_t* value);
-		template <> void cleanupArg<const wchar_t*>(value_t* value);
+		template <class TArg>	void cleanupArg(value_t* value) {}
+		template <>				void cleanupArg<std::string>(value_t* value);
+		template <>				void cleanupArg<std::wstring>(value_t* value);
+		template <>				void cleanupArg<const char*>(value_t* value);
+		template <>				void cleanupArg<const wchar_t*>(value_t* value);
 
 		template <class TArg = void, class... TArgs>
 		void cleanupArgs(value_t* values) {
@@ -91,7 +86,8 @@ namespace jni
 			cleanupArgs<TArgs...>(values + 1);
 		}
 
-		template <> inline void cleanupArgs<void>(value_t* values) {}
+		template <>
+		inline void cleanupArgs<void>(value_t* values) {}
 
 		template <class... TArgs>
 		class ArgArray

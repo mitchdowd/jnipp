@@ -25,6 +25,7 @@ namespace jni
 		/*
 			Object Implementations
 		 */
+
 		std::string valueSig(const Object* obj)
 		{
 			if (obj == nullptr || obj->isNull())

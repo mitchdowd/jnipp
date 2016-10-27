@@ -71,6 +71,36 @@ namespace jni
 		Helper Functions
 	 */
 
+#ifndef _WIN32
+
+	std::wstring toWString(const jchar* source, jsize length)
+	{
+		std::wstring result;
+
+		result.reserve(length * 2);
+
+		for (size_t i = 0; i < length; ++i)
+		{
+			wchar_t ch = source[i];
+
+			// Check for a two-segment character.
+			if (ch >= wchar_t(0xD800) && ch <= wchar_t(0xDBFF)) {
+				if (i + 1 >= length)
+					break;
+
+				// Create a single, 32-bit character.
+				ch = (ch - wchar_t(0xD800)) << 10;
+				ch += source[i++] - wchar_t(0xDC00 + 0x10000);
+			}
+
+			result += ch;
+		}
+
+		return result;
+	}
+
+#endif // _WIN32
+
 	JNIEnv* env()
 	{
 		static thread_local ScopedEnv env;
@@ -126,7 +156,6 @@ namespace jni
 		return result;
 	}
 
-#ifdef _WIN32
 	static std::wstring toWString(jobject handle, bool deleteLocal = true)
 	{
 		std::wstring result;
@@ -136,7 +165,11 @@ namespace jni
 			JNIEnv* env = jni::env();
 
 			const jchar* chars = env->GetStringChars(jstring(handle), NULL);
+#ifdef _WIN32
 			result.assign((const wchar_t*) chars, env->GetStringLength(jstring(handle)));
+#else
+			result = toWString(chars, env->GetStringLength(jstring(handle)));
+#endif
 			env->ReleaseStringChars(jstring(handle), chars);
 
 			if (deleteLocal)
@@ -145,9 +178,7 @@ namespace jni
 
 		return result;
 	}
-#else
-# error "utf32"
-#endif
+
 
 	/*
 		Stand-alone Function Impelementations
@@ -420,6 +451,7 @@ namespace jni
 	}
 
 #ifdef _WIN32
+
 	template <> void Object::set(field_t field, const std::wstring& value)
 	{
 		JNIEnv* env = jni::env();
@@ -437,6 +469,7 @@ namespace jni
 		env->SetObjectField(_handle, field, handle);
 		env->DeleteLocalRef(handle);
 	}
+
 #else
 # error "utf32"
 #endif
