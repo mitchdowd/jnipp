@@ -16,8 +16,8 @@ namespace jni
 	namespace internal
 	{
 		// Base Type Conversions
-		void valueArg(value_t* v, bool a)			{ ((jvalue*) v)->z = a; }
-		void valueArg(value_t* v, wchar_t a)		{ ((jvalue*) v)->c = a; }
+		void valueArg(value_t* v, bool a)			{ ((jvalue*) v)->z = jboolean(a); }
+		void valueArg(value_t* v, wchar_t a)		{ ((jvalue*) v)->c = jchar(a); }	// Note: Possible truncation.
 		void valueArg(value_t* v, short a)			{ ((jvalue*) v)->s = a; }
 		void valueArg(value_t* v, int a)			{ ((jvalue*) v)->i = a; }
 		void valueArg(value_t* v, long long a)		{ ((jvalue*) v)->j = a; }
@@ -29,6 +29,7 @@ namespace jni
 		/*
 			Object Implementations
 		 */
+
 		std::string valueSig(const Object* obj)
 		{
 			if (obj == nullptr || obj->isNull())

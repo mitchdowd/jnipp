@@ -68,6 +68,8 @@ namespace jni
 
 			_attached = true;
 		}
+
+		_vm = vm;
 	}
 
 	/*
