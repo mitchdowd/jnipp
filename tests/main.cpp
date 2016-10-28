@@ -138,7 +138,7 @@ TEST(Class_call_staticMethod_byName)
 	float     f = jni::Class("java/lang/Float").call<float>("parseFloat", "123.0");
 	double    d = jni::Class("java/lang/Double").call<double>("parseDouble", "123.0");
 
-	ASSERT(i = 1000);
+	ASSERT(i == 1000);
 	ASSERT(b == true);
 	ASSERT(c == L'x');
 	ASSERT(s == 1000);
