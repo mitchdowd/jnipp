@@ -49,6 +49,13 @@ TEST(Class_getName)
 	ASSERT(cls.getName() == "java.lang.String");
 }
 
+TEST(Class_getParent)
+{
+	jni::Class parent = jni::Class("java/lang/Integer").getParent();
+
+	ASSERT(parent.getName() == "java.lang.Number");
+}
+
 TEST(Class_newInstance)
 {
 	jni::Object str = jni::Class("java/lang/String").newInstance();
@@ -97,8 +104,18 @@ TEST(Class_get_staticField)
 TEST(Class_get_staticField_byName)
 {
 	jni::Class Integer("java/lang/Integer");
+	jni::Class Character("java/lang/Character");
+	jni::Class Short("java/lang/Short");
+	jni::Class Long("java/lang/Long");
+	jni::Class Float("java/lang/Float");
+	jni::Class Double("java/lang/Double");
 
-	ASSERT(Integer.get<int>("SIZE") == 32);
+	ASSERT(Short.get<short>("MAX_VALUE") == short(0x7FFF));
+	ASSERT(Character.get<wchar_t>("MAX_VALUE") == L'\xFFFF')
+	ASSERT(Integer.get<int>("MAX_VALUE") == int(0x7FFFFFFF));
+	ASSERT(Long.get<long long>("MAX_VALUE") == long long(0x7FFFFFFFFFFFFFFF));
+	ASSERT(std::isnan(Float.get<float>("NaN")));
+	ASSERT(std::isnan(Double.get<double>("NaN")));
 }
 
 TEST(Class_call_staticMethod)
@@ -113,9 +130,21 @@ TEST(Class_call_staticMethod)
 
 TEST(Class_call_staticMethod_byName)
 {
-	int i = jni::Class("java/lang/Integer").call<int>("parseInt", "1000");
+	int       i = jni::Class("java/lang/Integer").call<int>("parseInt", "1000");
+	bool      b = jni::Class("java/lang/Boolean").call<bool>("parseBoolean", "true");
+	wchar_t   c = jni::Class("java/lang/Character").call<wchar_t>("toLowerCase", L'X');
+	short     s = jni::Class("java/lang/Short").call<short>("parseShort", "1000");
+	long long l = jni::Class("java/lang/Long").call<long long>("parseLong", "1000");
+	float     f = jni::Class("java/lang/Float").call<float>("parseFloat", "123.0");
+	double    d = jni::Class("java/lang/Double").call<double>("parseDouble", "123.0");
 
 	ASSERT(i = 1000);
+	ASSERT(b == true);
+	ASSERT(c == L'x');
+	ASSERT(s == 1000);
+	ASSERT(l == 1000);
+	ASSERT(f == 123.0);	// Warning: floating point comparison.
+	ASSERT(d == 123.0);	// Warning: floating point comparison.
 }
 
 TEST(Object_defaultConstructor_isNull)
@@ -142,6 +171,27 @@ TEST(Object_moveConstructor)
 	ASSERT(!b.isNull());
 }
 
+TEST(Object_copyAssignmentOperator)
+{
+	jni::Object a = jni::Class("java/lang/String").newInstance();
+	jni::Object b = jni::Class("java/lang/Integer").newInstance(0);
+
+	a = b;
+
+	ASSERT(a == b);
+}
+
+TEST(Object_moveAssignmentOperator)
+{
+	jni::Object a = jni::Class("java/lang/String").newInstance();
+	jni::Object b = jni::Class("java/lang/Integer").newInstance(0);
+
+	a = std::move(b);
+
+	ASSERT(!a.isNull());
+	ASSERT(b.isNull());
+}
+
 TEST(Object_call)
 {
 	jni::Class Integer("java/lang/Integer");
@@ -154,8 +204,20 @@ TEST(Object_call)
 TEST(Object_call_byName)
 {
 	jni::Object i = jni::Class("java/lang/Integer").newInstance(100);
+	jni::Object b = jni::Class("java/lang/Boolean").newInstance(true);
+	jni::Object s = jni::Class("java/lang/Short").newInstance(short(100));
+	jni::Object l = jni::Class("java/lang/Long").newInstance(100LL);
+	jni::Object f = jni::Class("java/lang/Float").newInstance(100.0f);
+	jni::Object d = jni::Class("java/lang/Double").newInstance(100.0);
 
 	ASSERT(i.call<int>("intValue") == 100);
+	ASSERT(s.call<short>("shortValue") == 100);
+	ASSERT(b.call<bool>("booleanValue") == true);
+	ASSERT(l.call<long long>("longValue") == 100LL);
+	ASSERT(f.call<float>("floatValue") == 100.0f);	// Warning: Floating point comparison.
+	ASSERT(d.call<double>("doubleValue") == 100.0);	// Warning: Floating point comparison.
+	ASSERT(i.call<std::wstring>("toString") == L"100");
+	ASSERT(i.call<std::string>("toString") == "100");
 }
 
 TEST(Object_call_withArgs)
@@ -170,56 +232,70 @@ TEST(Object_call_withArgs)
 TEST(Object_call_byNameWithArgs)
 {
 	jni::Object str = jni::Class("java/lang/String").newInstance("Testing");
+	jni::Object str2 = jni::Class("java/lang/String").newInstance(L"Testing");
 
 	ASSERT(str.call<wchar_t>("charAt", 1) == L'e');
+	ASSERT(str2.call<wchar_t>("charAt", 1) == L'e');
 }
 
 TEST(Arg_bool)
 {
-	std::string str = jni::Class("java/lang/String").call<std::string>("valueOf", true);
+	std::string str1 = jni::Class("java/lang/String").call<std::string>("valueOf", true);
+	std::wstring str2 = jni::Class("java/lang/String").call<std::wstring>("valueOf", true);
 
-	ASSERT(str == "true");
+	ASSERT(str1 == "true");
+	ASSERT(str2 == L"true");
 }
 
 TEST(Arg_wchar)
 {
-	std::string str = jni::Class("java/lang/String").call<std::string>("valueOf", L'X');
+	std::string str1 = jni::Class("java/lang/String").call<std::string>("valueOf", L'X');
+	std::wstring str2 = jni::Class("java/lang/String").call<std::wstring>("valueOf", L'X');
 
-	ASSERT(str == "X");
+	ASSERT(str1 == "X");
+	ASSERT(str2 == L"X");
 }
 
 TEST(Arg_double)
 {
-	std::string str = jni::Class("java/lang/String").call<std::string>("valueOf", 123.0);
+	std::string str1 = jni::Class("java/lang/String").call<std::string>("valueOf", 123.0);
+	std::wstring str2 = jni::Class("java/lang/String").call<std::wstring>("valueOf", 123.0);
 
-	ASSERT(str == "123.0");
+	ASSERT(str1 == "123.0");
+	ASSERT(str2 == L"123.0");
 }
 
 TEST(Arg_float)
 {
-	std::string str = jni::Class("java/lang/String").call<std::string>("valueOf", 123.0f);
+	std::string str1 = jni::Class("java/lang/String").call<std::string>("valueOf", 123.0f);
+	std::wstring str2 = jni::Class("java/lang/String").call<std::wstring>("valueOf", 123.0f);
 
-	ASSERT(str == "123.0");
+	ASSERT(str1 == "123.0");
+	ASSERT(str2 == L"123.0");
 }
 
 TEST(Arg_int)
 {
-	std::string str = jni::Class("java/lang/String").call<std::string>("valueOf", 123);
+	std::string str1 = jni::Class("java/lang/String").call<std::string>("valueOf", 123);
+	std::wstring str2 = jni::Class("java/lang/String").call<std::wstring>("valueOf", 123);
 
-	ASSERT(str == "123");
+	ASSERT(str1 == "123");
+	ASSERT(str2 == L"123");
 }
 
 TEST(Arg_longLong)
 {
-	std::string str = jni::Class("java/lang/String").call<std::string>("valueOf", 123LL);
+	std::string str1 = jni::Class("java/lang/String").call<std::string>("valueOf", 123LL);
+	std::wstring str2 = jni::Class("java/lang/String").call<std::wstring>("valueOf", 123LL);
 
-	ASSERT(str == "123");
+	ASSERT(str1 == "123");
+	ASSERT(str2 == L"123");
 }
 
 TEST(Arg_Object)
 {
-	jni::Object str = jni::Class("java/lang/String").newInstance("123");
-	int i = jni::Class("java/lang/Integer").call<int>("parseInt", str);
+	jni::Object str1 = jni::Class("java/lang/String").newInstance("123");
+	int i = jni::Class("java/lang/Integer").call<int>("parseInt", str1);
 
 	ASSERT(i == 123);
 }
@@ -236,6 +312,7 @@ int main()
 		// jni::Class Tests
 		RUN_TEST(Class_findByName);
 		RUN_TEST(Class_getName);
+		RUN_TEST(Class_getParent);
 		RUN_TEST(Class_newInstance);
 		RUN_TEST(Class_newInstance_withArgs);
 		RUN_TEST(Class_getStaticField);
@@ -249,6 +326,8 @@ int main()
 		RUN_TEST(Object_defaultConstructor_isNull);
 		RUN_TEST(Object_copyConstructorIsSameObject);
 		RUN_TEST(Object_moveConstructor);
+		RUN_TEST(Object_copyAssignmentOperator);
+		RUN_TEST(Object_moveAssignmentOperator);
 		RUN_TEST(Object_call);
 		RUN_TEST(Object_call_byName);
 		RUN_TEST(Object_call_withArgs);

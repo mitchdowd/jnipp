@@ -224,323 +224,6 @@ namespace jni
 	}
 
 	/*
-		Object Implementation
-	 */
-
-	Object::Object() noexcept : _handle(NULL), _class(NULL), _isGlobal(false)
-	{
-	}
-
-	Object::Object(const Object& other) : _handle(NULL), _class(NULL), _isGlobal(!other.isNull())
-	{
-		if (!other.isNull())
-			_handle = env()->NewGlobalRef(other._handle);
-	}
-
-	Object::Object(Object&& other) noexcept : _handle(other._handle), _class(other._class), _isGlobal(other._isGlobal)
-	{
-		other._handle = NULL;
-		other._class  = NULL;
-		other._isGlobal = false;
-	}
-
-	Object::Object(jobject ref, int scopeFlags) : _handle(ref), _class(NULL), _isGlobal((scopeFlags & Temporary) == 0)
-	{
-		if (!_isGlobal)
-			return;
-
-		JNIEnv* env = jni::env();
-
-		_handle = env->NewGlobalRef(ref);
-
-		if (scopeFlags & DeleteLocalInput)
-			env->DeleteLocalRef(ref);
-	}
-
-	Object::~Object() noexcept
-	{
-		JNIEnv* env = jni::env();
-
-		if (_isGlobal)
-			env->DeleteGlobalRef(_handle);
-
-		if (_class != NULL)
-			env->DeleteGlobalRef(_class);
-	}
-
-	Object& Object::operator=(const Object& other)
-	{
-		if (_handle != other._handle)
-		{
-			JNIEnv* env = jni::env();
-
-			// Ditch the old reference.
-			if (_isGlobal)
-				env->DeleteGlobalRef(_handle);
-			if (_class != NULL)
-				env->DeleteGlobalRef(_class);
-
-			// Assign the new reference.
-			if ((_isGlobal = !other.isNull()) != false)
-				_handle = env->NewGlobalRef(other._handle);
-
-			_class = NULL;
-		}
-
-		return *this;
-	}
-
-	bool Object::operator==(const Object& other) const
-	{
-		return env()->IsSameObject(_handle, other._handle) != JNI_FALSE;
-	}
-
-	Object& Object::operator=(Object&& other)
-	{
-		if (_handle != other._handle)
-		{
-			JNIEnv* env = jni::env();
-
-			// Ditch the old reference.
-			if (_isGlobal)
-				env->DeleteGlobalRef(_handle);
-			if (_class != NULL)
-				env->DeleteGlobalRef(_class);
-
-			// Assign the new reference.
-			_handle   = other._handle;
-			_isGlobal = other._isGlobal;
-			_class    = other._class;
-
-			other._handle   = NULL;
-			other._isGlobal = false;
-			other._class    = NULL;
-		}
-
-		return *this;
-	}
-
-	bool Object::isNull() const noexcept
-	{
-		return _handle == NULL || env()->IsSameObject(_handle, NULL);
-	}
-
-	template <>	bool Object::callMethod(method_t method, internal::value_t* args) const
-	{
-		auto result = env()->CallBooleanMethodA(_handle, method, (jvalue*) args);
-		handleJavaExceptions();
-		return result != 0;
-	}
-
-	template <> bool Object::get(field_t field) const
-	{
-		return env()->GetBooleanField(_handle, field) != 0;
-	}
-
-	template <> void Object::set(field_t field, const bool& value)
-	{
-		env()->SetBooleanField(_handle, field, value);
-	}
-
-	template <>	wchar_t Object::callMethod(method_t method, internal::value_t* args) const
-	{
-		auto result = env()->CallCharMethodA(_handle, method, (jvalue*) args);
-		handleJavaExceptions();
-		return result;
-	}
-
-	template <> wchar_t Object::get(field_t field) const
-	{
-		return env()->GetCharField(_handle, field);
-	}
-
-	template <> void Object::set(field_t field, const wchar_t& value)
-	{
-		env()->SetCharField(_handle, field, value);
-	}
-
-	template <>	short Object::callMethod(method_t method, internal::value_t* args) const
-	{
-		auto result = env()->CallShortMethodA(_handle, method, (jvalue*) args);
-		handleJavaExceptions();
-		return result;
-	}
-
-	template <> short Object::get(field_t field) const
-	{
-		return env()->GetShortField(_handle, field);
-	}
-
-	template <> void Object::set(field_t field, const short& value)
-	{
-		env()->SetShortField(_handle, field, value);
-	}
-
-	template <>	int Object::callMethod(method_t method, internal::value_t* args) const
-	{
-		auto result = env()->CallIntMethodA(_handle, method, (jvalue*) args);
-		handleJavaExceptions();
-		return result;
-	}
-
-	template <> int Object::get(field_t field) const
-	{
-		return env()->GetIntField(_handle, field);
-	}
-
-	template <> void Object::set(field_t field, const int& value)
-	{
-		env()->SetIntField(_handle, field, value);
-	}
-
-	template <>	long long Object::callMethod(method_t method, internal::value_t* args) const
-	{
-		auto result = env()->CallLongMethodA(_handle, method, (jvalue*) args);
-		handleJavaExceptions();
-		return result;
-	}
-
-	template <> long long Object::get(field_t field) const
-	{
-		return env()->GetLongField(_handle, field);
-	}
-
-	template <> void Object::set(field_t field, const long long& value)
-	{
-		env()->SetLongField(_handle, field, value);
-	}
-
-	template <>	float Object::callMethod(method_t method, internal::value_t* args) const
-	{
-		auto result = env()->CallFloatMethodA(_handle, method, (jvalue*) args);
-		handleJavaExceptions();
-		return result;
-	}
-
-	template <> float Object::get(field_t field) const
-	{
-		return env()->GetFloatField(_handle, field);
-	}
-
-	template <> void Object::set(field_t field, const float& value)
-	{
-		env()->SetFloatField(_handle, field, value);
-	}
-
-	template <>	double Object::callMethod(method_t method, internal::value_t* args) const
-	{
-		auto result = env()->CallDoubleMethodA(_handle, method, (jvalue*) args);
-		handleJavaExceptions();
-		return result;
-	}
-
-	template <> double Object::get(field_t field) const
-	{
-		return env()->GetDoubleField(_handle, field);
-	}
-
-	template <> void Object::set(field_t field, const double& value)
-	{
-		env()->SetDoubleField(_handle, field, value);
-	}
-
-	template <>	std::string Object::callMethod(method_t method, internal::value_t* args) const
-	{
-		auto result = env()->CallObjectMethodA(_handle, method, (jvalue*) args);
-		handleJavaExceptions();
-		return toString(result);
-	}
-
-	template <>	std::wstring Object::callMethod(method_t method, internal::value_t* args) const
-	{
-		auto result = env()->CallObjectMethodA(_handle, method, (jvalue*) args);
-		handleJavaExceptions();
-		return toWString(result);
-	}
-
-	template <> std::string Object::get(field_t field) const
-	{
-		return toString(env()->GetObjectField(_handle, field));
-	}
-
-	template <> std::wstring Object::get(field_t field) const
-	{
-		return toWString(env()->GetObjectField(_handle, field));
-	}
-
-
-	template <> void Object::set(field_t field, const std::string& value)
-	{
-		JNIEnv* env = jni::env();
-
-		jobject handle = env->NewStringUTF(value.c_str());
-		env->SetObjectField(_handle, field, handle);
-		env->DeleteLocalRef(handle);
-	}
-
-
-
-	template <> void Object::set(field_t field, const std::wstring& value)
-	{
-		JNIEnv* env = jni::env();
-
-#ifdef _WIN32
-		jobject handle = env->NewString((const jchar*) value.c_str(), jsize(value.length()));
-#else
-        auto jstr = toJString(value.c_str(), value.length());
-		jobject handle = env->NewString(jstr.c_str(), jsize(jstr.length()));
-#endif
-		env->SetObjectField(_handle, field, handle);
-		env->DeleteLocalRef(handle);
-	}
-
-	template <> void Object::set(field_t field, const wchar_t* const& value)
-	{
-		JNIEnv* env = jni::env();
-#ifdef _WIN32
-		jobject handle = env->NewString((const jchar*) value, jsize(std::wcslen(value)));
-#else
-        auto jstr = toJString(value, std::wcslen(value));
-		jobject handle = env->NewString(jstr.c_str(), jsize(jstr.length()));
-#endif
-		env->SetObjectField(_handle, field, handle);
-		env->DeleteLocalRef(handle);
-	}
-
-	template <> void Object::set(field_t field, const char* const& value)
-	{
-		JNIEnv* env = jni::env();
-
-		jobject handle = env->NewStringUTF(value);
-		env->SetObjectField(_handle, field, handle);
-		env->DeleteLocalRef(handle);
-	}
-
-	jclass Object::getClass() const
-	{
-		if (_class == NULL)
-		{
-			JNIEnv* env = jni::env();
-
-			jclass classRef = env->GetObjectClass(_handle);
-			_class = jclass(env->NewGlobalRef(classRef));
-			env->DeleteLocalRef(classRef);
-		}
-
-		return _class;
-	}
-
-	method_t Object::getMethod(const char* name, const char* signature) const
-	{
-		return Class(getClass(), Temporary).getMethod(name, signature);
-	}
-
-	field_t Object::getField(const char* name, const char* signature) const
-	{
-		return Class(getClass(), Temporary).getField(name, signature);
-	}
-
-	/*
 		Class Implementation
 	 */
 
@@ -827,8 +510,6 @@ namespace jni
 		return toWString(env()->GetStaticObjectField(jclass(getHandle()), field));
 	}
 
-
-
 	template <> void Class::set(field_t field, const std::wstring& value)
 	{
 		JNIEnv* env = jni::env();
@@ -851,7 +532,321 @@ namespace jni
 	}
 
 	/*
-		Class Implementation
+		Object Implementation
+	 */
+
+	Object::Object() noexcept : _handle(NULL), _class(NULL), _isGlobal(false)
+	{
+	}
+
+	Object::Object(const Object& other) : _handle(NULL), _class(NULL), _isGlobal(!other.isNull())
+	{
+		if (!other.isNull())
+			_handle = env()->NewGlobalRef(other._handle);
+	}
+
+	Object::Object(Object&& other) noexcept : _handle(other._handle), _class(other._class), _isGlobal(other._isGlobal)
+	{
+		other._handle = NULL;
+		other._class  = NULL;
+		other._isGlobal = false;
+	}
+
+	Object::Object(jobject ref, int scopeFlags) : _handle(ref), _class(NULL), _isGlobal((scopeFlags & Temporary) == 0)
+	{
+		if (!_isGlobal)
+			return;
+
+		JNIEnv* env = jni::env();
+
+		_handle = env->NewGlobalRef(ref);
+
+		if (scopeFlags & DeleteLocalInput)
+			env->DeleteLocalRef(ref);
+	}
+
+	Object::~Object() noexcept
+	{
+		JNIEnv* env = jni::env();
+
+		if (_isGlobal)
+			env->DeleteGlobalRef(_handle);
+
+		if (_class != NULL)
+			env->DeleteGlobalRef(_class);
+	}
+
+	Object& Object::operator=(const Object& other)
+	{
+		if (_handle != other._handle)
+		{
+			JNIEnv* env = jni::env();
+
+			// Ditch the old reference.
+			if (_isGlobal)
+				env->DeleteGlobalRef(_handle);
+			if (_class != NULL)
+				env->DeleteGlobalRef(_class);
+
+			// Assign the new reference.
+			if ((_isGlobal = !other.isNull()) != false)
+				_handle = env->NewGlobalRef(other._handle);
+
+			_class = NULL;
+		}
+
+		return *this;
+	}
+
+	bool Object::operator==(const Object& other) const
+	{
+		return env()->IsSameObject(_handle, other._handle) != JNI_FALSE;
+	}
+
+	Object& Object::operator=(Object&& other)
+	{
+		if (_handle != other._handle)
+		{
+			JNIEnv* env = jni::env();
+
+			// Ditch the old reference.
+			if (_isGlobal)
+				env->DeleteGlobalRef(_handle);
+			if (_class != NULL)
+				env->DeleteGlobalRef(_class);
+
+			// Assign the new reference.
+			_handle   = other._handle;
+			_isGlobal = other._isGlobal;
+			_class    = other._class;
+
+			other._handle   = NULL;
+			other._isGlobal = false;
+			other._class    = NULL;
+		}
+
+		return *this;
+	}
+
+	bool Object::isNull() const noexcept
+	{
+		return _handle == NULL || env()->IsSameObject(_handle, NULL);
+	}
+
+	template <>	bool Object::callMethod(method_t method, internal::value_t* args) const
+	{
+		auto result = env()->CallBooleanMethodA(_handle, method, (jvalue*) args);
+		handleJavaExceptions();
+		return result != 0;
+	}
+
+	template <> bool Object::get(field_t field) const
+	{
+		return env()->GetBooleanField(_handle, field) != 0;
+	}
+
+	template <> void Object::set(field_t field, const bool& value)
+	{
+		env()->SetBooleanField(_handle, field, value);
+	}
+
+	template <>	wchar_t Object::callMethod(method_t method, internal::value_t* args) const
+	{
+		auto result = env()->CallCharMethodA(_handle, method, (jvalue*) args);
+		handleJavaExceptions();
+		return result;
+	}
+
+	template <> wchar_t Object::get(field_t field) const
+	{
+		return env()->GetCharField(_handle, field);
+	}
+
+	template <> void Object::set(field_t field, const wchar_t& value)
+	{
+		env()->SetCharField(_handle, field, value);
+	}
+
+	template <>	short Object::callMethod(method_t method, internal::value_t* args) const
+	{
+		auto result = env()->CallShortMethodA(_handle, method, (jvalue*) args);
+		handleJavaExceptions();
+		return result;
+	}
+
+	template <> short Object::get(field_t field) const
+	{
+		return env()->GetShortField(_handle, field);
+	}
+
+	template <> void Object::set(field_t field, const short& value)
+	{
+		env()->SetShortField(_handle, field, value);
+	}
+
+	template <>	int Object::callMethod(method_t method, internal::value_t* args) const
+	{
+		auto result = env()->CallIntMethodA(_handle, method, (jvalue*) args);
+		handleJavaExceptions();
+		return result;
+	}
+
+	template <> int Object::get(field_t field) const
+	{
+		return env()->GetIntField(_handle, field);
+	}
+
+	template <> void Object::set(field_t field, const int& value)
+	{
+		env()->SetIntField(_handle, field, value);
+	}
+
+	template <>	long long Object::callMethod(method_t method, internal::value_t* args) const
+	{
+		auto result = env()->CallLongMethodA(_handle, method, (jvalue*) args);
+		handleJavaExceptions();
+		return result;
+	}
+
+	template <> long long Object::get(field_t field) const
+	{
+		return env()->GetLongField(_handle, field);
+	}
+
+	template <> void Object::set(field_t field, const long long& value)
+	{
+		env()->SetLongField(_handle, field, value);
+	}
+
+	template <>	float Object::callMethod(method_t method, internal::value_t* args) const
+	{
+		auto result = env()->CallFloatMethodA(_handle, method, (jvalue*) args);
+		handleJavaExceptions();
+		return result;
+	}
+
+	template <> float Object::get(field_t field) const
+	{
+		return env()->GetFloatField(_handle, field);
+	}
+
+	template <> void Object::set(field_t field, const float& value)
+	{
+		env()->SetFloatField(_handle, field, value);
+	}
+
+	template <>	double Object::callMethod(method_t method, internal::value_t* args) const
+	{
+		auto result = env()->CallDoubleMethodA(_handle, method, (jvalue*) args);
+		handleJavaExceptions();
+		return result;
+	}
+
+	template <> double Object::get(field_t field) const
+	{
+		return env()->GetDoubleField(_handle, field);
+	}
+
+	template <> void Object::set(field_t field, const double& value)
+	{
+		env()->SetDoubleField(_handle, field, value);
+	}
+
+	template <>	std::string Object::callMethod(method_t method, internal::value_t* args) const
+	{
+		auto result = env()->CallObjectMethodA(_handle, method, (jvalue*) args);
+		handleJavaExceptions();
+		return toString(result);
+	}
+
+	template <>	std::wstring Object::callMethod(method_t method, internal::value_t* args) const
+	{
+		auto result = env()->CallObjectMethodA(_handle, method, (jvalue*) args);
+		handleJavaExceptions();
+		return toWString(result);
+	}
+
+	template <> std::string Object::get(field_t field) const
+	{
+		return toString(env()->GetObjectField(_handle, field));
+	}
+
+	template <> std::wstring Object::get(field_t field) const
+	{
+		return toWString(env()->GetObjectField(_handle, field));
+	}
+
+	template <> void Object::set(field_t field, const std::string& value)
+	{
+		JNIEnv* env = jni::env();
+
+		jobject handle = env->NewStringUTF(value.c_str());
+		env->SetObjectField(_handle, field, handle);
+		env->DeleteLocalRef(handle);
+	}
+
+	template <> void Object::set(field_t field, const std::wstring& value)
+	{
+		JNIEnv* env = jni::env();
+
+#ifdef _WIN32
+		jobject handle = env->NewString((const jchar*) value.c_str(), jsize(value.length()));
+#else
+        auto jstr = toJString(value.c_str(), value.length());
+		jobject handle = env->NewString(jstr.c_str(), jsize(jstr.length()));
+#endif
+		env->SetObjectField(_handle, field, handle);
+		env->DeleteLocalRef(handle);
+	}
+
+	template <> void Object::set(field_t field, const wchar_t* const& value)
+	{
+		JNIEnv* env = jni::env();
+#ifdef _WIN32
+		jobject handle = env->NewString((const jchar*) value, jsize(std::wcslen(value)));
+#else
+        auto jstr = toJString(value, std::wcslen(value));
+		jobject handle = env->NewString(jstr.c_str(), jsize(jstr.length()));
+#endif
+		env->SetObjectField(_handle, field, handle);
+		env->DeleteLocalRef(handle);
+	}
+
+	template <> void Object::set(field_t field, const char* const& value)
+	{
+		JNIEnv* env = jni::env();
+
+		jobject handle = env->NewStringUTF(value);
+		env->SetObjectField(_handle, field, handle);
+		env->DeleteLocalRef(handle);
+	}
+
+	jclass Object::getClass() const
+	{
+		if (_class == NULL)
+		{
+			JNIEnv* env = jni::env();
+
+			jclass classRef = env->GetObjectClass(_handle);
+			_class = jclass(env->NewGlobalRef(classRef));
+			env->DeleteLocalRef(classRef);
+		}
+
+		return _class;
+	}
+
+	method_t Object::getMethod(const char* name, const char* signature) const
+	{
+		return Class(getClass(), Temporary).getMethod(name, signature);
+	}
+
+	field_t Object::getField(const char* name, const char* signature) const
+	{
+		return Class(getClass(), Temporary).getField(name, signature);
+	}
+
+	/*
+		Vm Implementation
 	 */
 
 	typedef jint (JNICALL *CreateVm_t)(JavaVM**, void**, void*);
