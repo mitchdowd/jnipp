@@ -3,6 +3,9 @@
 
   // Windows Dependencies
 # include <windows.h>
+#else
+  // UNIX Dependencies
+# include <dlfcn.h>
 #endif
 
 // External Dependencies
@@ -942,7 +945,24 @@ namespace jni
 			}
 
 #else
-# error Platform not yet supported
+
+			void* lib = ::dlopen(path.c_str(), RTLD_NOW | RTLD_GLOBAL);
+
+			if (lib == NULL)
+			{
+				isVm.store(false);
+				throw InitializationException("Could not load JVM library");
+			}
+
+			CreateVm_t JNI_CreateJavaVM = (CreateVm_t) ::dlsym(lib, "JNI_CreateJavaVM");
+
+			if (JNI_CreateJavaVM == NULL || JNI_CreateJavaVM(&javaVm, (void**) &env, &args) != 0)
+			{
+				isVm.store(false);
+				::dlclose(lib);
+				throw InitializationException("Java Virtual Machine failed during creation");
+			}
+
 #endif // _WIN32
 		}
 	}
