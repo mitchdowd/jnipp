@@ -223,7 +223,7 @@ namespace jni
 		Class corresponds with `java.lang.Class`, and allows you to instantiate
 		Objects and get class members such as methods and fields.
 	 */
-	class Class final : private Object
+	class Class : protected Object
 	{
 	public:
 		/**
@@ -481,6 +481,30 @@ namespace jni
 		template <class TType> TType callStaticMethod(method_t method, internal::value_t* values) const;
 		template <class TType> TType callExactMethod(jobject obj, method_t method, internal::value_t* values) const;
 		Object newObject(method_t constructor, internal::value_t* args) const;
+	};
+
+	/**
+		Convenience class for dealing with Java enums.
+	 */
+	class Enum : protected Class
+	{
+	public:
+		/**
+			Loads the Enum with the given JNI-formatted name.
+			\param name The name of the enum.
+		 */
+		Enum(const char* name);
+
+		/**
+			Gets the enum value with the given name.
+			\param name The name of the enum value.
+			\return The enum value identifier.
+		 */
+		Object get(const char* name) const;
+
+	private:
+		// Instance Variables
+		std::string _name;
 	};
 
 	/**

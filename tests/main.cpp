@@ -238,6 +238,19 @@ TEST(Object_call_byNameWithArgs)
 	ASSERT(str2.call<wchar_t>("charAt", 1) == L'e');
 }
 
+TEST(Enum_get)
+{
+	jni::Class Thread("java/lang/Thread");
+	jni::Enum State("java/lang/Thread$State");
+	jni::method_t currentThread = Thread.getStaticMethod("currentThread", "()Ljava/lang/Thread;");
+	jni::method_t getState = Thread.getMethod("getState", "()Ljava/lang/Thread$State;");
+
+	jni::Object thread = Thread.call<jni::Object>(currentThread);
+	jni::Object state = thread.call<jni::Object>(getState);
+
+	ASSERT(state == State.get("RUNNABLE"));
+}
+
 TEST(Arg_bool)
 {
 	std::string str1 = jni::Class("java/lang/String").call<std::string>("valueOf", true);
@@ -332,6 +345,9 @@ int main()
 		RUN_TEST(Object_call_byName);
 		RUN_TEST(Object_call_withArgs);
 		RUN_TEST(Object_call_byNameWithArgs);
+
+		// jni::Enum Tests
+		RUN_TEST(Enum_get);
 
 		// Argument Type Tests
 		RUN_TEST(Arg_bool);
