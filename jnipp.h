@@ -104,11 +104,15 @@ namespace jni
 			Calls the method on this Object with the given name, and no arguments.
 			Note that the return type should be explicitly stated in the function
 			call.
-			\param name The name of the method to call.
+			\param name The name of the method to call (with optional signature).
 			\return The method's return value.
 		 */
 		template <class TReturn>
 		TReturn call(const char* name) const {
+			if (std::strchr(name, '()'))
+				return call<TReturn>(getMethod(name));
+
+			// No signature supplied. Generate our own.
 			method_t method = getMethod(name, ("()" + internal::valueSig((TReturn*) nullptr)).c_str());
 			return call<TReturn>(method);
 		}
@@ -132,12 +136,15 @@ namespace jni
 			Note that the return type should be explicitly stated in the function
 			call. The type signature of the method is calculated by the types of
 			the supplied arguments.
-			\param name The name of the method to call.
+			\param name The name of the method to call (and optional signature).
 			\param args Arguments to supply to the method.
 			\return The method's return value.
 		 */
 		template <class TReturn, class... TArgs>
 		TReturn call(const char* name, const TArgs&... args) const {
+			if (std::strchr(name, '('))
+				return call<TReturn>(getMethod(name), args...);
+
 			std::string sig = "(" + internal::sig(args...) + ")" + internal::valueSig((TReturn*) nullptr);
 			method_t method = getMethod(name, sig.c_str());
 			return call<TReturn>(method, args...);
@@ -210,6 +217,7 @@ namespace jni
 	private:
 		// Helper Functions
 		method_t getMethod(const char* name, const char* signature) const;
+		method_t getMethod(const char* nameAndSignature) const;
 		field_t getField(const char* name, const char* signature) const;
 		template <class TType> TType callMethod(method_t method, internal::value_t* values) const;
 
@@ -296,6 +304,15 @@ namespace jni
 			\return The method ID.
 		 */
 		method_t getMethod(const char* name, const char* signature) const;
+
+		/**
+			Gets a handle to the method with the given name and signature.
+			This handle can then be stored so that the method does not need
+			to be looked up by name again. It does not need to be deleted.
+			\param nameAndSignature Name and signature identifier (e.g. "toString()Ljava/lang/String;").
+			\return The method ID.
+		 */
+		method_t getMethod(const char* nameAndSignature) const;
 
 		/**
 			Gets a handle to the static method with the given name and signature.

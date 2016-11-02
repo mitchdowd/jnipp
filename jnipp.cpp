@@ -557,6 +557,11 @@ namespace jni
 		return Class(getClass(), Temporary).getMethod(name, signature);
 	}
 
+	method_t Object::getMethod(const char* nameAndSignature) const
+	{
+		return Class(getClass(), Temporary).getMethod(nameAndSignature);
+	}
+
 	field_t Object::getField(const char* name, const char* signature) const
 	{
 		return Class(getClass(), Temporary).getField(name, signature);
@@ -610,6 +615,24 @@ namespace jni
 
 		if (id == nullptr)
 			throw NameResolutionException(name);
+
+		return id;
+	}
+
+
+	method_t Class::getMethod(const char* nameAndSignature) const
+	{
+		jmethodID id = nullptr;
+		const char* sig = std::strchr(nameAndSignature, '(');
+
+		if (sig != NULL)
+		{
+			std::string name(nameAndSignature, sig - nameAndSignature);
+			id = env()->GetMethodID(jclass(getHandle()), name.c_str(), sig);
+		}
+
+		if (id == nullptr)
+			throw NameResolutionException(nameAndSignature);
 
 		return id;
 	}

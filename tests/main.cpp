@@ -84,9 +84,11 @@ TEST(Class_getStaticField)
 
 TEST(Class_getMethod)
 {
-	jni::method_t method = jni::Class("java/lang/Integer").getMethod("intValue", "()I");
+	jni::method_t method1 = jni::Class("java/lang/Integer").getMethod("intValue", "()I");
+	jni::method_t method2 = jni::Class("java/lang/Integer").getMethod("intValue()I");
 
-	ASSERT(method);
+	ASSERT(method1);
+	ASSERT(method2);
 }
 
 TEST(Class_getStaticMethod)
