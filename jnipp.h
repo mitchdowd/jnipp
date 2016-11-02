@@ -391,6 +391,12 @@ namespace jni
 		Class(jclass ref, int scopeFlags = 0);
 
 		/**
+			Tells whether this Class is null or valid.
+			\return `true` if null, `false` if valid.
+		 */
+		bool isNull() const noexcept { return Object::isNull(); }
+
+		/**
 			Creates a new instance of this Java class and returns a reference to
 			it. The item's parameterless constructor is called.
 			\return The created instance.
@@ -398,10 +404,17 @@ namespace jni
 		Object newInstance() const;
 
 		/**
-			Tells whether this Class is null or valid.
-			\return `true` if null, `false` if valid.
+			Creates a new instance of this Java class and returns a reference to
+			it.
+			\param constructor The constructor to call.
+			\param args Arguments to supply to the constructor.
+			\return The created instance.
 		 */
-		bool isNull() const noexcept { return Object::isNull(); }
+		template <class... TArgs>
+		Object newInstance(method_t constructor, const TArgs&... args) const {
+			internal::ArgArray<TArgs...> transform(args...);
+			return newObject(constructor, transform.values);
+		}
 
 		/**
 			Creates a new instance of this Java class and returns a reference to
@@ -412,9 +425,8 @@ namespace jni
 		 */
 		template <class... TArgs>
 		Object newInstance(const TArgs&... args) const {
-			internal::ArgArray<TArgs...> transform(args...);
 			method_t constructor = getMethod("<init>", ("(" + internal::sig(args...) + ")V").c_str());
-			return newObject(constructor, transform.values);
+			return newInstance(constructor, args...);
 		}
 
 		/**
@@ -465,6 +477,14 @@ namespace jni
 			\return The method ID.
 		 */
 		method_t getStaticMethod(const char* name, const char* signature) const;
+
+		/**
+			Gets a handle to the constructor for this Class with the given
+			signature. Note that the return type should always be `void` ("V").
+			\param signature The JNI method signature for the constructor.
+			\return The constructor method ID.
+		 */
+		method_t getConstructor(const char* signature) const { return getMethod("<init>", signature); }
 
 		/**
 			Gets the parent Class of this Class.

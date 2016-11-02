@@ -61,8 +61,12 @@ TEST(Class_getParent)
 
 TEST(Class_newInstance)
 {
+	jni::Class Integer("java/lang/Integer");
+	jni::method_t constructor = Integer.getConstructor("(Ljava/lang/String;)V");
+	jni::Object i = Integer.newInstance(constructor, "123");
 	jni::Object str = jni::Class("java/lang/String").newInstance();
 
+	ASSERT(!i.isNull());
 	ASSERT(!str.isNull());
 }
 
@@ -121,6 +125,14 @@ TEST(Class_get_staticField_byName)
 	ASSERT(Long.get<long long>("MAX_VALUE") == (long long) (0x7FFFFFFFFFFFFFFF));
 	ASSERT(std::isnan(Float.get<float>("NaN")));
 	ASSERT(std::isnan(Double.get<double>("NaN")));
+}
+
+TEST(Class_getConstructor)
+{
+	jni::Class Integer("java/lang/Integer");
+	jni::method_t constructor = Integer.getConstructor("(Ljava/lang/String;)V");
+
+	ASSERT(constructor);
 }
 
 TEST(Class_call_staticMethod)
@@ -339,6 +351,7 @@ int main()
 		RUN_TEST(Class_get_staticField);
 		RUN_TEST(Class_get_staticField_byName);
 		RUN_TEST(Class_call_staticMethod_byName);
+		RUN_TEST(Class_getConstructor);
 
 		// jni::Object Tests
 		RUN_TEST(Object_defaultConstructor_isNull);
