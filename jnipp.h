@@ -109,7 +109,7 @@ namespace jni
 		 */
 		template <class TReturn>
 		TReturn call(const char* name) const {
-			if (std::strchr(name, '()'))
+			if (std::strstr(name, "()"))
 				return call<TReturn>(getMethod(name));
 
 			// No signature supplied. Generate our own.
