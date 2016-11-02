@@ -93,9 +93,6 @@ extern "C" void Java_com_example_Demo_run(jni::JNIEnv* env, jni::jobject obj)
 
 ## Configuration
 
-By default, *jnipp* uses std::exception and std::string to represent exception
-and string classes. If you wish, you can update the type definition in `types.h`
-to refer to your own exception and string classes if you so choose.
-
-Bear in mind that they must behave like the standard library equivalents to
-a certain degree (i.e. accepting `const char*` constructors, etc).
+By default, *jnipp* uses std::runtime_error as the base exception class. If you wish,
+you can update the type definition in `types.h` to refer to your own exception class
+if you so choose. It just needs a `const char*` constructor.
