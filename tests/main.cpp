@@ -1,6 +1,9 @@
 // Project Dependencies
 #include <jnipp.h>
 
+// Standard Dependencies
+#include <cmath>
+
 // Local Dependencies
 #include "testing.h"
 
@@ -113,7 +116,7 @@ TEST(Class_get_staticField_byName)
 	ASSERT(Short.get<short>("MAX_VALUE") == short(0x7FFF));
 	ASSERT(Character.get<wchar_t>("MAX_VALUE") == L'\xFFFF')
 	ASSERT(Integer.get<int>("MAX_VALUE") == int(0x7FFFFFFF));
-	ASSERT(Long.get<long long>("MAX_VALUE") == long long(0x7FFFFFFFFFFFFFFF));
+	ASSERT(Long.get<long long>("MAX_VALUE") == (long long) (0x7FFFFFFFFFFFFFFF));
 	ASSERT(std::isnan(Float.get<float>("NaN")));
 	ASSERT(std::isnan(Double.get<double>("NaN")));
 }

@@ -418,19 +418,9 @@ namespace jni
 		return env()->GetCharField(_handle, field);
 	}
 
-	template <> void Object::set(field_t field, const wchar_t& value)
-	{
-		env()->SetCharField(_handle, field, value);
-	}
-
 	template <> short Object::get(field_t field) const
 	{
 		return env()->GetShortField(_handle, field);
-	}
-
-	template <> void Object::set(field_t field, const short& value)
-	{
-		env()->SetShortField(_handle, field, value);
 	}
 
 	template <> int Object::get(field_t field) const
@@ -438,19 +428,9 @@ namespace jni
 		return env()->GetIntField(_handle, field);
 	}
 
-	template <> void Object::set(field_t field, const int& value)
-	{
-		env()->SetIntField(_handle, field, value);
-	}
-
 	template <> long long Object::get(field_t field) const
 	{
 		return env()->GetLongField(_handle, field);
-	}
-
-	template <> void Object::set(field_t field, const long long& value)
-	{
-		env()->SetLongField(_handle, field, value);
 	}
 
 	template <> float Object::get(field_t field) const
@@ -458,19 +438,9 @@ namespace jni
 		return env()->GetFloatField(_handle, field);
 	}
 
-	template <> void Object::set(field_t field, const float& value)
-	{
-		env()->SetFloatField(_handle, field, value);
-	}
-
 	template <> double Object::get(field_t field) const
 	{
 		return env()->GetDoubleField(_handle, field);
-	}
-
-	template <> void Object::set(field_t field, const double& value)
-	{
-		env()->SetDoubleField(_handle, field, value);
 	}
 
 	template <> std::string Object::get(field_t field) const
@@ -481,6 +451,41 @@ namespace jni
 	template <> std::wstring Object::get(field_t field) const
 	{
 		return toWString(env()->GetObjectField(_handle, field));
+	}
+
+	template <> Object Object::get(field_t field) const
+	{
+		return Object(env()->GetObjectField(_handle, field), DeleteLocalInput);
+	}
+
+	template <> void Object::set(field_t field, const wchar_t& value)
+	{
+		env()->SetCharField(_handle, field, value);
+	}
+
+	template <> void Object::set(field_t field, const short& value)
+	{
+		env()->SetShortField(_handle, field, value);
+	}
+
+	template <> void Object::set(field_t field, const int& value)
+	{
+		env()->SetIntField(_handle, field, value);
+	}
+
+	template <> void Object::set(field_t field, const long long& value)
+	{
+		env()->SetLongField(_handle, field, value);
+	}
+
+	template <> void Object::set(field_t field, const float& value)
+	{
+		env()->SetFloatField(_handle, field, value);
+	}
+
+	template <> void Object::set(field_t field, const double& value)
+	{
+		env()->SetDoubleField(_handle, field, value);
 	}
 
 	template <> void Object::set(field_t field, const std::string& value)
@@ -526,6 +531,11 @@ namespace jni
 		jobject handle = env->NewStringUTF(value);
 		env->SetObjectField(_handle, field, handle);
 		env->DeleteLocalRef(handle);
+	}
+
+	template <> void Object::set(field_t field, const Object& value)
+	{
+		env()->SetObjectField(_handle, field, value.getHandle());
 	}
 
 	jclass Object::getClass() const
@@ -863,6 +873,13 @@ namespace jni
 		auto result = env()->CallNonvirtualObjectMethodA(obj, jclass(getHandle()), method, (jvalue*)args);
 		handleJavaExceptions();
 		return toWString(result);
+	}
+
+	template <> Object Class::callExactMethod(jobject obj, method_t method, internal::value_t* args) const
+	{
+		auto result = env()->CallNonvirtualObjectMethodA(obj, jclass(getHandle()), method, (jvalue*)args);
+		handleJavaExceptions();
+		return Object(result, DeleteLocalInput);
 	}
 
 	Object Class::newObject(method_t constructor, internal::value_t* args) const

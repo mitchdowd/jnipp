@@ -5,6 +5,10 @@
 #include <iostream>
 #include <iomanip>
 
+#ifdef ASSERT
+# undef ASSERT
+#endif
+
 /** Run the test with the given name. */
 #define RUN_TEST(TestName) {													\
 	bool result = true;															\
