@@ -945,6 +945,10 @@ namespace jni
 				}
 			}
 		}
+#else
+
+		// Best guess so far.
+		result = "/usr/lib/jvm/default-java/jre/lib/amd64/server/libjvm.so";
 
 #endif // _WIN32
 
