@@ -1,11 +1,153 @@
 #ifndef _JNIPP_H_
 #define _JNIPP_H_ 1
 
-// Local Dependencies
-#include "internal.h"
+// Standard Dependencies
+#include <cstring>
+#include <stdexcept>		// For std::runtime_error
+
+// Forward Declarations
+struct JNIEnv_;
+struct _JNIEnv;
+struct _jmethodID;
+struct _jfieldID;
+class  _jobject;
+class  _jclass;
 
 namespace jni
 {
+	// JNI Base Types
+#ifdef __ANDROID__
+	typedef _JNIEnv		JNIEnv;
+#else
+	typedef JNIEnv_		JNIEnv;
+#endif
+	typedef _jobject*	jobject;
+	typedef _jclass*	jclass;
+
+	/**
+		You can save a method via its handle using Class::getMethod() if it is
+		going to be used often. This saves Object::call() from having to locate
+		the method each time by name.
+
+		Note that these handles are global and do not need to be deleted.
+	 */
+	typedef _jmethodID* method_t;
+
+	/**
+		You can save a field via its handle using Class::getField() if it is
+		going to be used often. This saves Object::set() and Object::get() from
+		having to locate the field each time by name.
+
+		Note that these handles are global and do not need to be deleted.
+	 */
+	typedef _jfieldID* field_t;
+
+	/**
+		Base class for thrown Exceptions. Change it to whatever your chosen
+		Exception class, as long as that class has a `const char*` constructor.
+	*/
+	typedef std::runtime_error Exception;
+
+	// Foward Declarations
+	class Object;
+
+	/**
+		This namespace is for messy implementation details only. It is not a part
+		of the external API and is subject to change at any time. It is only in a
+		header file due to the fact it is required by some template functions.
+
+		Long story short...  this stuff be messy, yo.
+	 */
+	namespace internal
+	{
+		/*
+			Signature Generation
+		 */
+
+		inline std::string valueSig(const void*)			{ return "V"; }
+		inline std::string valueSig(const bool*)			{ return "Z"; }
+		inline std::string valueSig(const wchar_t*)			{ return "C"; }
+		inline std::string valueSig(const short*)			{ return "S"; }
+		inline std::string valueSig(const int*)				{ return "I"; }
+		inline std::string valueSig(const long long*)		{ return "J"; }
+		inline std::string valueSig(const float*)			{ return "F"; }
+		inline std::string valueSig(const double*)			{ return "D"; }
+		inline std::string valueSig(const std::string*)		{ return "Ljava/lang/String;"; }
+		inline std::string valueSig(const std::wstring*)	{ return "Ljava/lang/String;"; }
+		inline std::string valueSig(const char* const*)		{ return "Ljava/lang/String;"; }
+		inline std::string valueSig(const wchar_t* const*)	{ return "Ljava/lang/String;"; }
+		std::string valueSig(const Object* obj);
+
+		template <int n, class TArg>
+		inline std::string valueSig(const TArg (*arg)[n]) { return valueSig((const TArg* const*) arg); }
+
+		inline std::string sig() { return ""; }
+
+		template <class TArg, class... TArgs>
+		std::string sig(const TArg& arg, const TArgs&... args) {
+			return valueSig(&arg) + sig(args...);
+		}
+
+		/*
+			Argument Conversion
+		 */
+
+		typedef long long value_t;
+
+		void valueArg(value_t* v, bool a);
+		void valueArg(value_t* v, wchar_t a);
+		void valueArg(value_t* v, short a);
+		void valueArg(value_t* v, int a);
+		void valueArg(value_t* v, long long a);
+		void valueArg(value_t* v, float a);
+		void valueArg(value_t* v, double a);
+		void valueArg(value_t* v, jobject a);
+		void valueArg(value_t* v, const Object& a);
+		void valueArg(value_t* v, const std::string& a);
+		void valueArg(value_t* v, const char* a);
+		void valueArg(value_t* v, const std::wstring& a);
+		void valueArg(value_t* v, const wchar_t* a);
+
+		inline void args(value_t*) {}
+
+		template <class TArg, class... TArgs>
+		void args(value_t* values, const TArg& arg, const TArgs&... args) {
+			valueArg(values, arg);
+			internal::args(values + 1, args...);
+		}
+
+		template <class TArg>	void cleanupArg(value_t* value) {}
+		template <>				void cleanupArg<std::string>(value_t* value);
+		template <>				void cleanupArg<std::wstring>(value_t* value);
+		template <>				void cleanupArg<const char*>(value_t* value);
+		template <>				void cleanupArg<const wchar_t*>(value_t* value);
+
+		template <class TArg = void, class... TArgs>
+		void cleanupArgs(value_t* values) {
+			cleanupArg<TArg>(values);
+			cleanupArgs<TArgs...>(values + 1);
+		}
+
+		template <>
+		inline void cleanupArgs<void>(value_t* values) {}
+
+		template <class... TArgs>
+		class ArgArray
+		{
+		public:
+			ArgArray(const TArgs&... args) {
+				std::memset(this, 0, sizeof(ArgArray<TArgs...>));
+				internal::args(values, args...);
+			}
+
+			~ArgArray() {
+				cleanupArgs<TArgs...>(values);
+			}
+
+			value_t values[sizeof...(TArgs)];
+		};
+	}
+
 	/**
 		Initialises the Java Native Interface with the given JNIEnv handle, which
 		gets passed into a native function which is called from Java. This only

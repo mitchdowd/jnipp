@@ -8,6 +8,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Files", "Solution Files", "{5A4C5782-6F86-4413-9E19-3F6539DCD835}"
 	ProjectSection(SolutionItems) = preProject
 		LICENSE = LICENSE
+		makefile = makefile
 		README.md = README.md
 	EndProjectSection
 EndProject
