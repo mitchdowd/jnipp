@@ -77,6 +77,7 @@ namespace jni
 		inline std::string valueSig(const char* const*)		{ return "Ljava/lang/String;"; }
 		inline std::string valueSig(const wchar_t* const*)	{ return "Ljava/lang/String;"; }
 		std::string valueSig(const Object* obj);
+		inline std::string valueSig(const Object* const* obj)	{ return valueSig(obj ? *obj : nullptr); }
 
 		template <int n, class TArg>
 		inline std::string valueSig(const TArg (*arg)[n]) { return valueSig((const TArg* const*) arg); }
@@ -103,6 +104,7 @@ namespace jni
 		void valueArg(value_t* v, double a);
 		void valueArg(value_t* v, jobject a);
 		void valueArg(value_t* v, const Object& a);
+		void valueArg(value_t* v, const Object* const& a);
 		void valueArg(value_t* v, const std::string& a);
 		void valueArg(value_t* v, const char* a);
 		void valueArg(value_t* v, const std::wstring& a);
@@ -477,6 +479,15 @@ namespace jni
 			\return The method ID.
 		 */
 		method_t getStaticMethod(const char* name, const char* signature) const;
+
+		/**
+			Gets a handle to the static method with the given name and signature.
+			This handle can then be stored so that the method does not need
+			to be looked up by name again. It does not need to be deleted.
+			\param nameAndSignature Name and signature identifier (e.g. "toString()Ljava/lang/String;").
+			\return The method ID.
+		 */
+		method_t getStaticMethod(const char* nameAndSignature) const;
 
 		/**
 			Gets a handle to the constructor for this Class with the given

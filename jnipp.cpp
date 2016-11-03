@@ -538,6 +538,11 @@ namespace jni
 		env()->SetObjectField(_handle, field, value.getHandle());
 	}
 
+	template <> void Object::set(field_t field, const Object* const& value)
+	{
+		env()->SetObjectField(_handle, field, value ? value->getHandle() : NULL);
+	}
+
 	jclass Object::getClass() const
 	{
 		if (_class == NULL)
@@ -626,10 +631,7 @@ namespace jni
 		const char* sig = std::strchr(nameAndSignature, '(');
 
 		if (sig != NULL)
-		{
-			std::string name(nameAndSignature, sig - nameAndSignature);
-			id = env()->GetMethodID(jclass(getHandle()), name.c_str(), sig);
-		}
+			return getMethod(std::string(nameAndSignature, sig - nameAndSignature).c_str(), sig);
 
 		if (id == nullptr)
 			throw NameResolutionException(nameAndSignature);
@@ -643,6 +645,20 @@ namespace jni
 
 		if (id == nullptr)
 			throw NameResolutionException(name);
+
+		return id;
+	}
+
+	method_t Class::getStaticMethod(const char* nameAndSignature) const
+	{
+		jmethodID id = nullptr;
+		const char* sig = std::strchr(nameAndSignature, '(');
+
+		if (sig != NULL)
+			return getStaticMethod(std::string(nameAndSignature, sig - nameAndSignature).c_str(), sig);
+
+		if (id == nullptr)
+			throw NameResolutionException(nameAndSignature);
 
 		return id;
 	}
@@ -740,6 +756,16 @@ namespace jni
 	template <> void Class::set(field_t field, const double& value)
 	{
 		env()->SetStaticDoubleField(jclass(getHandle()), field, value);
+	}
+
+	template <> void Class::set(field_t field, const Object& value)
+	{
+		env()->SetStaticObjectField(jclass(getHandle()), field, value.getHandle());
+	}
+
+	template <> void Class::set(field_t field, const Object* const& value)
+	{
+		env()->SetStaticObjectField(jclass(getHandle()), field, value ? value->getHandle() : NULL);
 	}
 
 	template <> void Class::set(field_t field, const std::string& value)
@@ -1069,15 +1095,16 @@ namespace jni
 	namespace internal
 	{
 		// Base Type Conversions
-		void valueArg(value_t* v, bool a)			{ ((jvalue*) v)->z = jboolean(a); }
-		void valueArg(value_t* v, wchar_t a)		{ ((jvalue*) v)->c = jchar(a); }	// Note: Possible truncation.
-		void valueArg(value_t* v, short a)			{ ((jvalue*) v)->s = a; }
-		void valueArg(value_t* v, int a)			{ ((jvalue*) v)->i = a; }
-		void valueArg(value_t* v, long long a)		{ ((jvalue*) v)->j = a; }
-		void valueArg(value_t* v, float a)			{ ((jvalue*) v)->f = a; }
-		void valueArg(value_t* v, double a)			{ ((jvalue*) v)->d = a; }
-		void valueArg(value_t* v, jobject a)		{ ((jvalue*) v)->l = a; }
-		void valueArg(value_t* v, const Object& a)	{ ((jvalue*) v)->l = a.getHandle(); }
+		void valueArg(value_t* v, bool a)					{ ((jvalue*) v)->z = jboolean(a); }
+		void valueArg(value_t* v, wchar_t a)				{ ((jvalue*) v)->c = jchar(a); }	// Note: Possible truncation.
+		void valueArg(value_t* v, short a)					{ ((jvalue*) v)->s = a; }
+		void valueArg(value_t* v, int a)					{ ((jvalue*) v)->i = a; }
+		void valueArg(value_t* v, long long a)				{ ((jvalue*) v)->j = a; }
+		void valueArg(value_t* v, float a)					{ ((jvalue*) v)->f = a; }
+		void valueArg(value_t* v, double a)					{ ((jvalue*) v)->d = a; }
+		void valueArg(value_t* v, jobject a)				{ ((jvalue*) v)->l = a; }
+		void valueArg(value_t* v, const Object& a)			{ ((jvalue*) v)->l = a.getHandle(); }
+		void valueArg(value_t* v, const Object* const& a)	{ ((jvalue*) v)->l = a ? a->getHandle() : NULL; }
 
 		/*
 			Object Implementations
@@ -1151,12 +1178,12 @@ namespace jni
 
 		template <> void cleanupArg<const std::wstring*>(value_t* v)
 		{
-			env()->DeleteLocalRef(((jvalue*)v)->l);
+			env()->DeleteLocalRef(((jvalue*) v)->l);
 		}
 
 		template <> void cleanupArg<const wchar_t*>(value_t* v)
 		{
-			env()->DeleteLocalRef(((jvalue*)v)->l);
+			env()->DeleteLocalRef(((jvalue*) v)->l);
 		}
 	}
 }
