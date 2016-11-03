@@ -590,6 +590,10 @@ namespace jni
 			method_t method = getMethod(name, ("()" + internal::valueSig((TReturn*) nullptr)).c_str());
 			return call<TReturn>(obj, method);
 		}
+		template <class TReturn>
+		TReturn call(const Object* obj, const char* name) const {
+			return call<TReturn>(obj, name);
+		}
 
 		/**
 			Calls a non-static method on this Class, applying it to the supplied
@@ -605,6 +609,10 @@ namespace jni
 		TReturn call(const Object& obj, method_t method, const TArgs&... args) const {
 			internal::ArgArray<TArgs...> transform(args...);
 			return callExactMethod<TReturn>(obj.getHandle(), method, transform.values);
+		}
+		template <class TReturn, class... TArgs>
+		TReturn call(const Object* obj, method_t method, const TArgs&... args) const {
+			return call<TReturn>(*obj, method, args...);
 		}
 
 		/**
@@ -622,6 +630,10 @@ namespace jni
 			std::string sig = "(" + internal::sig(args...) + ")" + internal::valueSig((TReturn*) nullptr);
 			method_t method = getMethod(name, sig.c_str());
 			return call<TReturn>(obj, method, args...);
+		}
+		template <class TReturn, class... TArgs>
+		TReturn call(const Object* obj, const char* name, const TArgs&... args) const {
+			return call<TReturn>(*obj, name, args...);
 		}
 
 		/**
