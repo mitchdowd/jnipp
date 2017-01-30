@@ -1,0 +1,39 @@
+apply plugin: 'com.android.model.native'
+
+model {
+    android {
+        compileSdkVersion = 24
+        buildToolsVersion = '25.0.1'
+
+        defaultConfig {
+            minSdkVersion.apiLevel    = 15
+            targetSdkVersion.apiLevel = 24
+        }
+
+        ndk {
+            platformVersion = 9
+            moduleName ='jnipp'
+            toolchain = 'gcc'
+            stl = 'gnustl_static'
+            cppFlags.addAll(['-std=c++11', '-fexceptions', '-I' + file('.').absolutePath])
+            ldLibs.addAll(['log', 'android', 'EGL', 'GLESv1_CM'])
+        }
+
+        buildTypes {
+            release {
+                minifyEnabled = false
+                proguardFiles.add(file('proguard-rules.txt'))
+            }
+        }
+
+        sources {
+             main {
+                 jni {
+                     source {
+                         srcDir '.'
+                     }
+                 }
+            }
+        }
+    }
+}
