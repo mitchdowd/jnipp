@@ -62,7 +62,7 @@ namespace jni
 #ifdef __ANDROID__
 			if (vm->AttachCurrentThread(&_env, nullptr) != 0)
 #else
-				if (vm->AttachCurrentThread((void**) &_env, nullptr) != 0)
+			if (vm->AttachCurrentThread((void**) &_env, nullptr) != 0)
 #endif
 				throw InitializationException("Could not attach JNI to thread");
 
