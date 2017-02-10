@@ -791,6 +791,12 @@ namespace jni
 		env->DeleteLocalRef(handle);
 	}
 
+	template <>	void Class::callStaticMethod(method_t method, internal::value_t* args) const
+	{
+		env()->CallStaticVoidMethodA(jclass(getHandle()), method, (jvalue*) args);
+		handleJavaExceptions();
+	}
+
 	template <>	bool Class::callStaticMethod(method_t method, internal::value_t* args) const
 	{
 		auto result = env()->CallStaticBooleanMethodA(jclass(getHandle()), method, (jvalue*) args);

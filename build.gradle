@@ -12,9 +12,9 @@ model {
 
         ndk {
             platformVersion = 9
-            moduleName ='jnipp'
-            toolchain = 'gcc'
-            stl = 'gnustl_static'
+            moduleName      = 'jnipp'
+            toolchain       = 'gcc'
+            stl             = 'gnustl_static'
             cppFlags.addAll(['-std=c++11', '-fexceptions', '-I' + file('.').absolutePath])
             ldLibs.addAll(['log', 'android', 'EGL', 'GLESv1_CM'])
         }
