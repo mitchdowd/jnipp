@@ -867,6 +867,12 @@ namespace jni
 		return Object(result, DeleteLocalInput);
 	}
 
+	template <> void Class::callExactMethod(jobject obj, method_t method, internal::value_t* args) const
+	{
+		env()->CallNonvirtualVoidMethodA(obj, jclass(getHandle()), method, (jvalue*) args);
+		handleJavaExceptions();
+	}
+
 	template <>	bool Class::callExactMethod(jobject obj, method_t method, internal::value_t* args) const
 	{
 		auto result = env()->CallNonvirtualBooleanMethodA(obj, jclass(getHandle()), method, (jvalue*) args);
@@ -1150,11 +1156,11 @@ namespace jni
 			((jvalue*) v)->l = env()->NewStringUTF(a);
 		}
 
-		template <> void cleanupArg<const char*>(value_t* v)
-		{
-			env()->DeleteLocalRef(((jvalue*) v)->l);
-		}
 
+        template <> void cleanupArg<const char*>(value_t* v)
+        {
+            env()->DeleteLocalRef(((jvalue*) v)->l);
+        }
 #ifdef _WIN32
 
 		void valueArg(value_t* v, const std::wstring& a)
