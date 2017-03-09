@@ -557,6 +557,9 @@ namespace jni
 		 */
 		template <class TReturn, class... TArgs>
 		TReturn call(const char* name, const TArgs&... args) const {
+            if (std::strchr(name, '('))
+                return call<TReturn>(getStaticMethod(name), args...);
+
 			std::string sig = "(" + internal::sig(args...) + ")" + internal::valueSig((TReturn*) nullptr);
 			method_t method = getStaticMethod(name, sig.c_str());
 			return call<TReturn>(method, args...);
