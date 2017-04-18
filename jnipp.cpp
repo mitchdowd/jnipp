@@ -162,8 +162,8 @@ namespace jni
 			Object obj(exception, Object::Temporary);
 
 			env->ExceptionClear();
-
-			throw InvocationException(obj.call<std::string>("toString").c_str());
+			std::string msg = obj.call<std::string>("toString");
+			throw InvocationException(msg.c_str());
 		}
 	}
 
