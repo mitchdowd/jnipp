@@ -211,7 +211,7 @@ namespace jni
 
 
 	/*
-		Stand-alone Function Impelementations
+		Stand-alone Function Implementations
 	 */
 
 	void init(JNIEnv* env)
