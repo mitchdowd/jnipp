@@ -4,6 +4,7 @@
 // Standard Dependencies
 #include <cstring>
 #include <stdexcept>		// For std::runtime_error
+#include <string>
 
 // Forward Declarations
 struct JNIEnv_;
