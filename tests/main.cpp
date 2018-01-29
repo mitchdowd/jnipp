@@ -1,13 +1,6 @@
 // Project Dependencies
 #include <jnipp.h>
 
-#ifdef __ANDROID__
-	// The libc++ headers don't define these properly.
-	double nan(const char* arg);
-	float nanf(const char* arg);
-	long double nanl(const char* arg);
-#endif // __ANDROID__
-
 // Standard Dependencies
 #include <cmath>
 
