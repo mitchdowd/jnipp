@@ -94,5 +94,5 @@ extern "C" void Java_com_example_Demo_run(jni::JNIEnv* env, jni::jobject obj)
 ## Configuration
 
 By default, *jnipp* uses std::runtime_error as the base exception class. If you wish,
-you can update the type definition in `jnipp.h` to refer to your own exception class
-if you so choose. It just needs a `const char*` constructor.
+you can define `JNIPP_EXCEPTION_CLASS` to be the exception class you wish to use, before
+including `jnipp.h`. It just needs a `const char*` constructor.
