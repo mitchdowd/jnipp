@@ -1023,26 +1023,12 @@ namespace jni
             }
         }
 
+#else
+
+        // Best guess so far.
+        result = "/usr/lib/jvm/default-java/jre/lib/amd64/server/libjvm.so";
+
 #endif // _WIN32
-
-        if (result.length() == 0)
-        {
-            // Could not locate via registry. Try the JAVA_HOME environment variable.
-            if ((size = ::GetEnvironmentVariableA("JAVA_HOME", (LPSTR)buffer, sizeof(buffer))) != 0)
-            {
-                result = std::string((const char*)buffer) + "\\bin\\client\\jvm.dll";
-            }
-        }
-
-#ifndef _WIN32
-
-        if (result.length() == 0)
-        {
-            // Best guess so far.
-            result = "/usr/lib/jvm/default-java/jre/lib/amd64/server/libjvm.so";
-        }
-
-#endif // !_WIN32
 
         return result;
     }
