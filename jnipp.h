@@ -20,7 +20,7 @@ namespace jni
 #ifdef __ANDROID__
     typedef _JNIEnv     JNIEnv;
 #else
-    typedef JNIEnv_		JNIEnv;
+    typedef JNIEnv_     JNIEnv;
 #endif
     typedef _jobject*   jobject;
     typedef _jclass*    jclass;
@@ -45,7 +45,7 @@ namespace jni
 
 #ifdef JNIPP_EXCEPTION_CLASS
 
-	/**
+    /**
         Base class for thrown Exceptions.
      */
     typedef JNIPP_EXCEPTION_CLASS Exception;
@@ -82,13 +82,13 @@ namespace jni
         inline std::string valueSig(const int*)             { return "I"; }
         inline std::string valueSig(const long long*)       { return "J"; }
         inline std::string valueSig(const float*)           { return "F"; }
-        inline std::string valueSig(const double*)			{ return "D"; }
+        inline std::string valueSig(const double*)          { return "D"; }
         inline std::string valueSig(const std::string*)     { return "Ljava/lang/String;"; }
         inline std::string valueSig(const std::wstring*)    { return "Ljava/lang/String;"; }
         inline std::string valueSig(const char* const*)     { return "Ljava/lang/String;"; }
         inline std::string valueSig(const wchar_t* const*)  { return "Ljava/lang/String;"; }
         std::string valueSig(const Object* obj);
-        inline std::string valueSig(const Object* const* obj)	{ return valueSig(obj ? *obj : nullptr); }
+        inline std::string valueSig(const Object* const* obj) { return valueSig(obj ? *obj : nullptr); }
 
         template <int n, class TArg>
         inline std::string valueSig(const TArg (*arg)[n]) { return valueSig((const TArg* const*) arg); }
@@ -180,8 +180,8 @@ namespace jni
         /** Flags which can be passed to the Object constructor. */
         enum ScopeFlags
         {
-            Temporary            = 1,    ///< Temporary object. Do not create a global reference.
-            DeleteLocalInput    = 2        ///< The input reference is temporary and can be deleted.
+            Temporary        = 1,    ///< Temporary object. Do not create a global reference.
+            DeleteLocalInput = 2     ///< The input reference is temporary and can be deleted.
         };
 
         /** Default constructor. Creates a `null` object. */
