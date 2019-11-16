@@ -102,6 +102,16 @@ TEST(Class_getStaticMethod)
     ASSERT(method);
 }
 
+TEST(Class_call)
+{
+    jni::Class Integer("java/lang/Math");
+
+    double x = Integer.call<double>("random");
+
+    ASSERT(x >= 0.0);
+    ASSERT(x < 1.0);
+}
+
 TEST(Class_get_staticField)
 {
     jni::Class Integer("java/lang/Integer");
@@ -356,6 +366,7 @@ int main()
         RUN_TEST(Class_getStaticField);
         RUN_TEST(Class_getMethod);
         RUN_TEST(Class_getStaticMethod);
+        RUN_TEST(Class_call);
         RUN_TEST(Class_get_staticField);
         RUN_TEST(Class_get_staticField_byName);
         RUN_TEST(Class_call_staticMethod_byName);

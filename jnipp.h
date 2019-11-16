@@ -539,7 +539,7 @@ namespace jni
          */
         template <class TReturn>
         TReturn call(const char* name) const {
-            method_t method = getMethod(name, ("()" + internal::valueSig((TReturn*) nullptr)).c_str());
+            method_t method = getStaticMethod(name, ("()" + internal::valueSig((TReturn*) nullptr)).c_str());
             return call<TReturn>(method);
         }
 
