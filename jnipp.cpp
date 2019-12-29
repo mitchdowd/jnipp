@@ -348,7 +348,7 @@ namespace jni
         handleJavaExceptions();
     }
 
-    template <>    bool Object::callMethod(method_t method, internal::value_t* args) const
+    template <> bool Object::callMethod(method_t method, internal::value_t* args) const
     {
         auto result = env()->CallBooleanMethodA(_handle, method, (jvalue*) args);
         handleJavaExceptions();
@@ -365,56 +365,56 @@ namespace jni
         env()->SetBooleanField(_handle, field, value);
     }
 
-    template <>    wchar_t Object::callMethod(method_t method, internal::value_t* args) const
+    template <> wchar_t Object::callMethod(method_t method, internal::value_t* args) const
     {
         auto result = env()->CallCharMethodA(_handle, method, (jvalue*) args);
         handleJavaExceptions();
         return result;
     }
 
-    template <>    short Object::callMethod(method_t method, internal::value_t* args) const
+    template <> short Object::callMethod(method_t method, internal::value_t* args) const
     {
         auto result = env()->CallShortMethodA(_handle, method, (jvalue*) args);
         handleJavaExceptions();
         return result;
     }
 
-    template <>    int Object::callMethod(method_t method, internal::value_t* args) const
+    template <> int Object::callMethod(method_t method, internal::value_t* args) const
     {
         auto result = env()->CallIntMethodA(_handle, method, (jvalue*) args);
         handleJavaExceptions();
         return result;
     }
 
-    template <>    long long Object::callMethod(method_t method, internal::value_t* args) const
+    template <> long long Object::callMethod(method_t method, internal::value_t* args) const
     {
         auto result = env()->CallLongMethodA(_handle, method, (jvalue*) args);
         handleJavaExceptions();
         return result;
     }
 
-    template <>    float Object::callMethod(method_t method, internal::value_t* args) const
+    template <> float Object::callMethod(method_t method, internal::value_t* args) const
     {
         auto result = env()->CallFloatMethodA(_handle, method, (jvalue*) args);
         handleJavaExceptions();
         return result;
     }
 
-    template <>    double Object::callMethod(method_t method, internal::value_t* args) const
+    template <> double Object::callMethod(method_t method, internal::value_t* args) const
     {
         auto result = env()->CallDoubleMethodA(_handle, method, (jvalue*) args);
         handleJavaExceptions();
         return result;
     }
 
-    template <>    std::string Object::callMethod(method_t method, internal::value_t* args) const
+    template <> std::string Object::callMethod(method_t method, internal::value_t* args) const
     {
         auto result = env()->CallObjectMethodA(_handle, method, (jvalue*) args);
         handleJavaExceptions();
         return toString(result);
     }
 
-    template <>    std::wstring Object::callMethod(method_t method, internal::value_t* args) const
+    template <> std::wstring Object::callMethod(method_t method, internal::value_t* args) const
     {
         auto result = env()->CallObjectMethodA(_handle, method, (jvalue*) args);
         handleJavaExceptions();
@@ -1195,7 +1195,7 @@ namespace jni
 
         void valueArg(value_t* v, const std::wstring& a)
         {
-            ((jvalue*)v)->l = env()->NewString((const jchar*) a.c_str(), jsize(a.length()));
+            ((jvalue*) v)->l = env()->NewString((const jchar*) a.c_str(), jsize(a.length()));
         }
 
         void valueArg(value_t* v, const wchar_t* a)
