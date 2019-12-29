@@ -57,12 +57,12 @@ namespace jni
         if (vm == nullptr)
             throw InitializationException("JNI not initialized");
 
-        if (vm->GetEnv((void**) &_env, JNI_VERSION_1_2) != JNI_OK)
+        if (vm->GetEnv((void**)&_env, JNI_VERSION_1_2) != JNI_OK)
         {
 #ifdef __ANDROID__
             if (vm->AttachCurrentThread(&_env, nullptr) != 0)
 #else
-            if (vm->AttachCurrentThread((void**) &_env, nullptr) != 0)
+            if (vm->AttachCurrentThread((void**)&_env, nullptr) != 0)
 #endif
                 throw InitializationException("Could not attach JNI to thread");
 
@@ -76,11 +76,20 @@ namespace jni
         Helper Functions
      */
 
-#ifndef _WIN32
+#ifdef _WIN32
 
-    /**
-        Convert from a UTF-16 Java string to a UTF-32 string.
-     */
+    static bool fileExists(const std::string& filePath)
+    {
+        DWORD attr = ::GetFileAttributesA(filePath.c_str());
+
+        return attr != INVALID_FILE_ATTRIBUTES && !(attr & FILE_ATTRIBUTE_DIRECTORY);
+    }
+
+#else
+
+     /**
+         Convert from a UTF-16 Java string to a UTF-32 string.
+      */
     std::wstring toWString(const jchar* str, jsize length)
     {
         std::wstring result;
@@ -1017,9 +1026,21 @@ namespace jni
         if (result.length() == 0)
         {
             // Could not locate via registry. Try the JAVA_HOME environment variable.
-            if ((size = ::GetEnvironmentVariableA("JAVA_HOME", (LPSTR)buffer, sizeof(buffer))) != 0)
+            if ((size = ::GetEnvironmentVariableA("JAVA_HOME", (LPSTR) buffer, sizeof(buffer))) != 0)
             {
-                result = std::string((const char*)buffer) + "\\bin\\client\\jvm.dll";
+                std::string javaHome((const char*) buffer, size);
+
+                // Different installers put in different relative locations.
+                std::string options[] = {
+                    javaHome + "\\jre\\bin\\client\\jvm.dll",
+                    javaHome + "\\jre\\bin\\server\\jvm.dll",
+                    javaHome + "\\bin\\client\\jvm.dll",
+                    javaHome + "\\bin\\server\\jvm.dll"
+                };
+
+                for (auto i : options)
+                    if (fileExists(i))
+                        return i;
             }
         }
 
@@ -1056,20 +1077,8 @@ namespace jni
 
             if (lib == NULL)
             {
-                size_t index = path.rfind("\\client\\");
-
-                // JRE path names switched from "client" to "server" directory.
-                if (index != std::string::npos)
-                {
-                    path = path.replace(index, 8, "\\server\\");
-                    lib = ::LoadLibraryA(path.c_str());
-                }
-
-                if (lib == NULL)
-                {
-                    isVm.store(false);
-                    throw InitializationException("Could not load JVM library");
-                }
+                isVm.store(false);
+                throw InitializationException("Could not load JVM library");
             }
 
             CreateVm_t JNI_CreateJavaVM = (CreateVm_t) ::GetProcAddress(lib, "JNI_CreateJavaVM");
