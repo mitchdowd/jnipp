@@ -318,6 +318,26 @@ TEST(Array_constructor)
     ASSERT(!a.isNull());
 }
 
+TEST(Array_constructor_eachType)
+{
+    jni::Array<bool> b(10);
+    jni::Array<wchar_t> c(10);
+    jni::Array<short> s(10);
+    jni::Array<int> i(10);
+    jni::Array<long long> l(10);
+    jni::Array<float> f(10);
+    jni::Array<double> d(10);
+    jni::Array<std::string> str(10);
+    jni::Array<std::wstring> wstr(10);
+    jni::Array<jni::Object> obj(10);
+    jni::Array<jni::Object> obj2(10, jni::Class("java/lang/Integer"));
+
+    jni::Object* objs[] = { &b, &c, &s, &i, &l, &f, &d, &str, &wstr, &obj, &obj2 };
+
+    for (auto o : objs)
+        ASSERT(!o->isNull());
+}
+
 TEST(Array_constructor_withType)
 {
     jni::Array<jni::Object> a(10, jni::Class("java/lang/Integer"));
@@ -480,6 +500,7 @@ int main()
         // jni::Array Tests
         RUN_TEST(Array_defaultConstructor);
         RUN_TEST(Array_constructor);
+        RUN_TEST(Array_constructor_eachType);
         RUN_TEST(Array_constructor_withType);
         RUN_TEST(Array_copyConstructor);
         RUN_TEST(Array_moveConstructor);
