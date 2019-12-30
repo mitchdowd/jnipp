@@ -602,7 +602,7 @@ namespace jni
     Object Class::newInstance() const
     {
         method_t constructor = getMethod("<init>", "()V");
-        jobject obj = env()->NewObject(jclass(getHandle()), constructor);
+        jobject obj = env()->NewObject(getHandle(), constructor);
 
         handleJavaExceptions();
 
@@ -611,7 +611,7 @@ namespace jni
 
     field_t Class::getField(const char* name, const char* signature) const
     {
-        jfieldID id = env()->GetFieldID(jclass(getHandle()), name, signature);
+        jfieldID id = env()->GetFieldID(getHandle(), name, signature);
 
         if (id == nullptr)
             throw NameResolutionException(name);
@@ -621,7 +621,7 @@ namespace jni
 
     field_t Class::getStaticField(const char* name, const char* signature) const
     {
-        jfieldID id = env()->GetStaticFieldID(jclass(getHandle()), name, signature);
+        jfieldID id = env()->GetStaticFieldID(getHandle(), name, signature);
 
         if (id == nullptr)
             throw NameResolutionException(name);
@@ -631,7 +631,7 @@ namespace jni
 
     method_t Class::getMethod(const char* name, const char* signature) const
     {
-        jmethodID id = env()->GetMethodID(jclass(getHandle()), name, signature);
+        jmethodID id = env()->GetMethodID(getHandle(), name, signature);
 
         if (id == nullptr)
             throw NameResolutionException(name);
@@ -656,7 +656,7 @@ namespace jni
 
     method_t Class::getStaticMethod(const char* name, const char* signature) const
     {
-        jmethodID id = env()->GetStaticMethodID(jclass(getHandle()), name, signature);
+        jmethodID id = env()->GetStaticMethodID(getHandle(), name, signature);
 
         if (id == nullptr)
             throw NameResolutionException(name);
@@ -680,7 +680,7 @@ namespace jni
 
     Class Class::getParent() const
     {
-        return Class(env()->GetSuperclass(jclass(getHandle())), DeleteLocalInput);
+        return Class(env()->GetSuperclass(getHandle()), DeleteLocalInput);
     }
 
     std::string Class::getName() const
@@ -690,97 +690,97 @@ namespace jni
 
     template <> bool Class::get(field_t field) const
     {
-        return env()->GetStaticBooleanField(jclass(getHandle()), field) != 0;
+        return env()->GetStaticBooleanField(getHandle(), field) != 0;
     }
 
     template <> wchar_t Class::get(field_t field) const
     {
-        return env()->GetStaticCharField(jclass(getHandle()), field);
+        return env()->GetStaticCharField(getHandle(), field);
     }
 
     template <> short Class::get(field_t field) const
     {
-        return env()->GetStaticShortField(jclass(getHandle()), field);
+        return env()->GetStaticShortField(getHandle(), field);
     }
 
     template <> int Class::get(field_t field) const
     {
-        return env()->GetStaticIntField(jclass(getHandle()), field);
+        return env()->GetStaticIntField(getHandle(), field);
     }
 
     template <> long long Class::get(field_t field) const
     {
-        return env()->GetStaticLongField(jclass(getHandle()), field);
+        return env()->GetStaticLongField(getHandle(), field);
     }
 
     template <> float Class::get(field_t field) const
     {
-        return env()->GetStaticFloatField(jclass(getHandle()), field);
+        return env()->GetStaticFloatField(getHandle(), field);
     }
 
     template <> double Class::get(field_t field) const
     {
-        return env()->GetStaticDoubleField(jclass(getHandle()), field);
+        return env()->GetStaticDoubleField(getHandle(), field);
     }
 
     template <> std::string Class::get(field_t field) const
     {
-        return toString(env()->GetStaticObjectField(jclass(getHandle()), field));
+        return toString(env()->GetStaticObjectField(getHandle(), field));
     }
 
     template <> std::wstring Class::get(field_t field) const
     {
-        return toWString(env()->GetStaticObjectField(jclass(getHandle()), field));
+        return toWString(env()->GetStaticObjectField(getHandle(), field));
     }
 
     template <> Object Class::get(field_t field) const
     {
-        return Object(env()->GetStaticObjectField(jclass(getHandle()), field), DeleteLocalInput);
+        return Object(env()->GetStaticObjectField(getHandle(), field), DeleteLocalInput);
     }
 
     template <> void Class::set(field_t field, const bool& value)
     {
-        env()->SetStaticBooleanField(jclass(getHandle()), field, value);
+        env()->SetStaticBooleanField(getHandle(), field, value);
     }
 
     template <> void Class::set(field_t field, const wchar_t& value)
     {
-        env()->SetStaticCharField(jclass(getHandle()), field, value);
+        env()->SetStaticCharField(getHandle(), field, value);
     }
 
     template <> void Class::set(field_t field, const short& value)
     {
-        env()->SetStaticShortField(jclass(getHandle()), field, value);
+        env()->SetStaticShortField(getHandle(), field, value);
     }
 
     template <> void Class::set(field_t field, const int& value)
     {
-        env()->SetStaticIntField(jclass(getHandle()), field, value);
+        env()->SetStaticIntField(getHandle(), field, value);
     }
 
     template <> void Class::set(field_t field, const long long& value)
     {
-        env()->SetStaticLongField(jclass(getHandle()), field, value);
+        env()->SetStaticLongField(getHandle(), field, value);
     }
 
     template <> void Class::set(field_t field, const float& value)
     {
-        env()->SetStaticFloatField(jclass(getHandle()), field, value);
+        env()->SetStaticFloatField(getHandle(), field, value);
     }
 
     template <> void Class::set(field_t field, const double& value)
     {
-        env()->SetStaticDoubleField(jclass(getHandle()), field, value);
+        env()->SetStaticDoubleField(getHandle(), field, value);
     }
 
     template <> void Class::set(field_t field, const Object& value)
     {
-        env()->SetStaticObjectField(jclass(getHandle()), field, value.getHandle());
+        env()->SetStaticObjectField(getHandle(), field, value.getHandle());
     }
 
     template <> void Class::set(field_t field, const Object* const& value)
     {
-        env()->SetStaticObjectField(jclass(getHandle()), field, value ? value->getHandle() : nullptr);
+        env()->SetStaticObjectField(getHandle(), field, value ? value->getHandle() : nullptr);
     }
 
     template <> void Class::set(field_t field, const std::string& value)
@@ -788,7 +788,7 @@ namespace jni
         JNIEnv* env = jni::env();
 
         jobject handle = env->NewStringUTF(value.c_str());
-        env->SetStaticObjectField(jclass(getHandle()), field, handle);
+        env->SetStaticObjectField(getHandle(), field, handle);
         env->DeleteLocalRef(handle);
     }
 
@@ -802,165 +802,165 @@ namespace jni
         auto jstr = toJString(value.c_str(), value.length());
         jobject handle = env->NewString(jstr.c_str(), jsize(jstr.length()));
 #endif
-        env->SetStaticObjectField(jclass(getHandle()), field, handle);
+        env->SetStaticObjectField(getHandle(), field, handle);
         env->DeleteLocalRef(handle);
     }
 
     template <> void Class::callStaticMethod(method_t method, internal::value_t* args) const
     {
-        env()->CallStaticVoidMethodA(jclass(getHandle()), method, (jvalue*) args);
+        env()->CallStaticVoidMethodA(getHandle(), method, (jvalue*) args);
         handleJavaExceptions();
     }
 
     template <> bool Class::callStaticMethod(method_t method, internal::value_t* args) const
     {
-        auto result = env()->CallStaticBooleanMethodA(jclass(getHandle()), method, (jvalue*) args);
+        auto result = env()->CallStaticBooleanMethodA(getHandle(), method, (jvalue*) args);
         handleJavaExceptions();
         return result != 0;
     }
 
     template <> wchar_t Class::callStaticMethod(method_t method, internal::value_t* args) const
     {
-        auto result = env()->CallStaticCharMethodA(jclass(getHandle()), method, (jvalue*) args);
+        auto result = env()->CallStaticCharMethodA(getHandle(), method, (jvalue*) args);
         handleJavaExceptions();
         return result;
     }
 
     template <> short Class::callStaticMethod(method_t method, internal::value_t* args) const
     {
-        auto result = env()->CallStaticShortMethodA(jclass(getHandle()), method, (jvalue*) args);
+        auto result = env()->CallStaticShortMethodA(getHandle(), method, (jvalue*) args);
         handleJavaExceptions();
         return result;
     }
 
     template <> int Class::callStaticMethod(method_t method, internal::value_t* args) const
     {
-        auto result = env()->CallStaticIntMethodA(jclass(getHandle()), method, (jvalue*) args);
+        auto result = env()->CallStaticIntMethodA(getHandle(), method, (jvalue*) args);
         handleJavaExceptions();
         return result;
     }
 
     template <> long long Class::callStaticMethod(method_t method, internal::value_t* args) const
     {
-        auto result = env()->CallStaticLongMethodA(jclass(getHandle()), method, (jvalue*) args);
+        auto result = env()->CallStaticLongMethodA(getHandle(), method, (jvalue*) args);
         handleJavaExceptions();
         return result;
     }
 
     template <> float Class::callStaticMethod(method_t method, internal::value_t* args) const
     {
-        auto result = env()->CallStaticFloatMethodA(jclass(getHandle()), method, (jvalue*) args);
+        auto result = env()->CallStaticFloatMethodA(getHandle(), method, (jvalue*) args);
         handleJavaExceptions();
         return result;
     }
 
     template <> double Class::callStaticMethod(method_t method, internal::value_t* args) const
     {
-        auto result = env()->CallStaticDoubleMethodA(jclass(getHandle()), method, (jvalue*) args);
+        auto result = env()->CallStaticDoubleMethodA(getHandle(), method, (jvalue*) args);
         handleJavaExceptions();
         return result;
     }
 
     template <> std::string Class::callStaticMethod(method_t method, internal::value_t* args) const
     {
-        auto result = env()->CallStaticObjectMethodA(jclass(getHandle()), method, (jvalue*) args);
+        auto result = env()->CallStaticObjectMethodA(getHandle(), method, (jvalue*) args);
         handleJavaExceptions();
         return toString(result);
     }
 
     template <> std::wstring Class::callStaticMethod(method_t method, internal::value_t* args) const
     {
-        auto result = env()->CallStaticObjectMethodA(jclass(getHandle()), method, (jvalue*) args);
+        auto result = env()->CallStaticObjectMethodA(getHandle(), method, (jvalue*) args);
         handleJavaExceptions();
         return toWString(result);
     }
 
     template <> jni::Object Class::callStaticMethod(method_t method, internal::value_t* args) const
     {
-        auto result = env()->CallStaticObjectMethodA(jclass(getHandle()), method, (jvalue*) args);
+        auto result = env()->CallStaticObjectMethodA(getHandle(), method, (jvalue*) args);
         handleJavaExceptions();
         return Object(result, DeleteLocalInput);
     }
 
     template <> void Class::callExactMethod(jobject obj, method_t method, internal::value_t* args) const
     {
-        env()->CallNonvirtualVoidMethodA(obj, jclass(getHandle()), method, (jvalue*) args);
+        env()->CallNonvirtualVoidMethodA(obj, getHandle(), method, (jvalue*) args);
         handleJavaExceptions();
     }
 
     template <> bool Class::callExactMethod(jobject obj, method_t method, internal::value_t* args) const
     {
-        auto result = env()->CallNonvirtualBooleanMethodA(obj, jclass(getHandle()), method, (jvalue*) args);
+        auto result = env()->CallNonvirtualBooleanMethodA(obj, getHandle(), method, (jvalue*) args);
         handleJavaExceptions();
         return result != 0;
     }
 
     template <> wchar_t Class::callExactMethod(jobject obj, method_t method, internal::value_t* args) const
     {
-        auto result = env()->CallNonvirtualCharMethodA(obj, jclass(getHandle()), method, (jvalue*) args);
+        auto result = env()->CallNonvirtualCharMethodA(obj, getHandle(), method, (jvalue*) args);
         handleJavaExceptions();
         return result;
     }
 
     template <> short Class::callExactMethod(jobject obj, method_t method, internal::value_t* args) const
     {
-        auto result = env()->CallNonvirtualShortMethodA(obj, jclass(getHandle()), method, (jvalue*) args);
+        auto result = env()->CallNonvirtualShortMethodA(obj, getHandle(), method, (jvalue*) args);
         handleJavaExceptions();
         return result;
     }
 
     template <> int Class::callExactMethod(jobject obj, method_t method, internal::value_t* args) const
     {
-        auto result = env()->CallNonvirtualIntMethodA(obj, jclass(getHandle()), method, (jvalue*) args);
+        auto result = env()->CallNonvirtualIntMethodA(obj, getHandle(), method, (jvalue*) args);
         handleJavaExceptions();
         return result;
     }
 
     template <> long long Class::callExactMethod(jobject obj, method_t method, internal::value_t* args) const
     {
-        auto result = env()->CallNonvirtualLongMethodA(obj, jclass(getHandle()), method, (jvalue*) args);
+        auto result = env()->CallNonvirtualLongMethodA(obj, getHandle(), method, (jvalue*) args);
         handleJavaExceptions();
         return result;
     }
 
     template <>  float Class::callExactMethod(jobject obj, method_t method, internal::value_t* args) const
     {
-        auto result = env()->CallNonvirtualFloatMethodA(obj, jclass(getHandle()), method, (jvalue*) args);
+        auto result = env()->CallNonvirtualFloatMethodA(obj, getHandle(), method, (jvalue*) args);
         handleJavaExceptions();
         return result;
     }
 
     template <> double Class::callExactMethod(jobject obj, method_t method, internal::value_t* args) const
     {
-        auto result = env()->CallNonvirtualDoubleMethodA(obj, jclass(getHandle()), method, (jvalue*) args);
+        auto result = env()->CallNonvirtualDoubleMethodA(obj, getHandle(), method, (jvalue*) args);
         handleJavaExceptions();
         return result;
     }
 
     template <> std::string Class::callExactMethod(jobject obj, method_t method, internal::value_t* args) const
     {
-        auto result = env()->CallNonvirtualObjectMethodA(obj, jclass(getHandle()), method, (jvalue*)args);
+        auto result = env()->CallNonvirtualObjectMethodA(obj, getHandle(), method, (jvalue*)args);
         handleJavaExceptions();
         return toString(result);
     }
 
     template <> std::wstring Class::callExactMethod(jobject obj, method_t method, internal::value_t* args) const
     {
-        auto result = env()->CallNonvirtualObjectMethodA(obj, jclass(getHandle()), method, (jvalue*)args);
+        auto result = env()->CallNonvirtualObjectMethodA(obj, getHandle(), method, (jvalue*)args);
         handleJavaExceptions();
         return toWString(result);
     }
 
     template <> Object Class::callExactMethod(jobject obj, method_t method, internal::value_t* args) const
     {
-        auto result = env()->CallNonvirtualObjectMethodA(obj, jclass(getHandle()), method, (jvalue*)args);
+        auto result = env()->CallNonvirtualObjectMethodA(obj, getHandle(), method, (jvalue*)args);
         handleJavaExceptions();
         return Object(result, DeleteLocalInput);
     }
 
     Object Class::newObject(method_t constructor, internal::value_t* args) const
     {
-        jobject ref = env()->NewObjectA(jclass(getHandle()), constructor, (jvalue*)args);
+        jobject ref = env()->NewObjectA(getHandle(), constructor, (jvalue*)args);
         handleJavaExceptions();
         return Object(ref, DeleteLocalInput);
     }
@@ -979,6 +979,54 @@ namespace jni
     Object Enum::get(const char* name) const
     {
         return Class::get<Object>(getStaticField(name, _name.c_str()));
+    }
+
+    /*
+        Array Implementation
+     */
+
+    template <> Array<bool>::Array(long length) : Object(env()->NewBooleanArray(length)), _length(length)
+    {
+    }
+
+    template <> Array<wchar_t>::Array(long length) : Object(env()->NewCharArray(length)), _length(length)
+    {
+    }
+
+    template <> Array<short>::Array(long length) : Object(env()->NewShortArray(length)), _length(length)
+    {
+    }
+
+    template <> Array<int>::Array(long length) : Object(env()->NewIntArray(length)), _length(length)
+    {
+    }
+
+    template <> Array<long long>::Array(long length) : Object(env()->NewLongArray(length)), _length(length)
+    {
+    }
+
+    template <> Array<float>::Array(long length) : Object(env()->NewFloatArray(length)), _length(length)
+    {
+    }
+
+    template <> Array<double>::Array(long length) : Object(env()->NewDoubleArray(length)), _length(length)
+    {
+    }
+
+    template <> Array<std::string>::Array(long length) : Object(env()->NewObjectArray(length, Class("java/lang/String").getHandle(), nullptr)), _length(length)
+    {
+    }
+
+    template <> Array<std::wstring>::Array(long length) : Object(env()->NewObjectArray(length, Class("java/lang/String").getHandle(), nullptr)), _length(length)
+    {
+    }
+
+    template <> Array<Object>::Array(long length) : Object(env()->NewObjectArray(length, Class("java/lang/Object").getHandle(), nullptr)), _length(length)
+    {
+    }
+
+    template <> Array<Object>::Array(long length, const Class& type) : Object(env()->NewObjectArray(length, type.getHandle(), nullptr)), _length(length)
+    {
     }
 
     /*
@@ -1226,6 +1274,11 @@ namespace jni
         template <> void cleanupArg<const wchar_t*>(value_t* v)
         {
             env()->DeleteLocalRef(((jvalue*) v)->l);
+        }
+
+        long getArrayLength(jarray array)
+        {
+            return env()->GetArrayLength(array);
         }
     }
 }

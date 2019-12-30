@@ -7,6 +7,11 @@
 // Local Dependencies
 #include "testing.h"
 
+/*
+    jni::Vm Tests
+ */
+
+
 TEST(Vm_detectsJreInstall)
 {
     try
@@ -37,6 +42,11 @@ TEST(Vm_notAllowedMultipleVms)
 
     ASSERT(0);
 }
+
+/*
+    jni::Class Tests
+ */
+
 
 TEST(Class_findByName)
 {
@@ -174,6 +184,11 @@ TEST(Class_call_staticMethod_byName)
     ASSERT(d == 123.0);    // Warning: floating point comparison.
 }
 
+/*
+    jni::Object Tests
+ */
+
+
 TEST(Object_defaultConstructor_isNull)
 {
     jni::Object o;
@@ -265,6 +280,11 @@ TEST(Object_call_byNameWithArgs)
     ASSERT(str2.call<wchar_t>("charAt", 1) == L'e');
 }
 
+/*
+    jni::Enum Tests
+ */
+
+
 TEST(Enum_get)
 {
     jni::Class Thread("java/lang/Thread");
@@ -277,6 +297,77 @@ TEST(Enum_get)
 
     ASSERT(state == State.get("RUNNABLE"));
 }
+
+/*
+    jni::Array Tests
+ */
+
+TEST(Array_defaultConstructor)
+{
+    jni::Array<int> a;
+
+    ASSERT(a.getLength() == 0);
+    ASSERT(a.isNull());
+}
+
+TEST(Array_constructor)
+{
+    jni::Array<int> a(10);
+
+    ASSERT(a.getLength() == 10);
+    ASSERT(!a.isNull());
+}
+
+TEST(Array_constructor_withType)
+{
+    jni::Array<jni::Object> a(10, jni::Class("java/lang/Integer"));
+
+    ASSERT(a.getLength() == 10);
+    ASSERT(!a.isNull());
+}
+
+TEST(Array_copyConstructor)
+{
+    jni::Array<int> a(10);
+    jni::Array<int> b = a;
+
+    ASSERT(a == b);
+}
+
+TEST(Array_moveConstructor)
+{
+    jni::Array<int> a(10);
+    jni::Array<int> b = std::move(a);
+
+    ASSERT(a.isNull());
+    ASSERT(!b.isNull());
+}
+
+TEST(Array_copyAssignmentOperator)
+{
+    jni::Array<int> a(10);
+    jni::Array<int> b(11);
+
+    a = b;
+
+    ASSERT(a == b);
+}
+
+TEST(Array_moveAssignmentOperator)
+{
+    jni::Array<int> a(10);
+    jni::Array<int> b(11);
+
+    a = std::move(b);
+
+    ASSERT(!a.isNull());
+    ASSERT(b.isNull());
+}
+
+/*
+    Argument Type Tests
+ */
+
 
 TEST(Arg_bool)
 {
@@ -385,6 +476,13 @@ int main()
 
         // jni::Enum Tests
         RUN_TEST(Enum_get);
+
+        // jni::Array Tests
+        RUN_TEST(Array_defaultConstructor);
+        RUN_TEST(Array_constructor);
+        RUN_TEST(Array_constructor_withType);
+        RUN_TEST(Array_copyConstructor);
+        RUN_TEST(Array_moveConstructor);
 
         // Argument Type Tests
         RUN_TEST(Arg_bool);
