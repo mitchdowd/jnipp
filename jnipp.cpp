@@ -1106,6 +1106,86 @@ namespace jni
         return Object(output, DeleteLocalInput);
     }
 
+    template <> void Array<bool>::setElement(long index, bool value)
+    {
+        jboolean jvalue = value;
+        env()->SetBooleanArrayRegion(jbooleanArray(getHandle()), index, 1, &jvalue);
+        handleJavaExceptions();
+    }
+
+    template <> void Array<wchar_t>::setElement(long index, wchar_t value)
+    {
+        jchar jvalue = value;
+        env()->SetCharArrayRegion(jcharArray(getHandle()), index, 1, &jvalue);
+        handleJavaExceptions();
+    }
+
+    template <> void Array<short>::setElement(long index, short value)
+    {
+        jshort jvalue = value;
+        env()->SetShortArrayRegion(jshortArray(getHandle()), index, 1, &jvalue);
+        handleJavaExceptions();
+    }
+
+    template <> void Array<int>::setElement(long index, int value)
+    {
+        jint jvalue = value;
+        env()->SetIntArrayRegion(jintArray(getHandle()), index, 1, &jvalue);
+        handleJavaExceptions();
+    }
+
+    template <> void Array<long long>::setElement(long index, long long value)
+    {
+        jlong jvalue = value;
+        env()->SetLongArrayRegion(jlongArray(getHandle()), index, 1, &jvalue);
+        handleJavaExceptions();
+    }
+
+    template <> void Array<float>::setElement(long index, float value)
+    {
+        jfloat jvalue = value;
+        env()->SetFloatArrayRegion(jfloatArray(getHandle()), index, 1, &jvalue);
+        handleJavaExceptions();
+    }
+
+    template <> void Array<double>::setElement(long index, double value)
+    {
+        jdouble jvalue = value;
+        env()->SetDoubleArrayRegion(jdoubleArray(getHandle()), index, 1, &jvalue);
+        handleJavaExceptions();
+    }
+
+    template <> void Array<std::string>::setElement(long index, std::string value)
+    {
+        JNIEnv* env = jni::env();
+
+        jobject jvalue = env->NewStringUTF(value.c_str());;
+        env->SetObjectArrayElement(jobjectArray(getHandle()), index, jvalue);
+        env->DeleteLocalRef(jvalue);
+        handleJavaExceptions();
+    }
+
+    template <> void Array<std::wstring>::setElement(long index, std::wstring value)
+    {
+        JNIEnv* env = jni::env();
+
+#ifdef _WIN32
+        jobject jvalue = env->NewString((const jchar*) value.c_str(), jsize(value.length()));
+#else
+        auto jstr = toJString(value.c_str(), value.length());
+        jobject jvalue = env->NewString(jstr.c_str(), jsize(jstr.length()));
+#endif
+        env->SetObjectArrayElement(jobjectArray(getHandle()), index, jvalue);
+        env->DeleteLocalRef(jvalue);
+        handleJavaExceptions();
+    }
+
+    template <> void Array<Object>::setElement(long index, Object value)
+    {
+        env()->SetObjectArrayElement(jobjectArray(getHandle()), index, value.getHandle());
+        handleJavaExceptions();
+    }
+
     /*
         Vm Implementation
      */

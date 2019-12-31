@@ -387,8 +387,10 @@ TEST(Array_moveAssignmentOperator)
 TEST(Array_getElement_defaultValue)
 {
     jni::Array<int> a(10);
+    jni::Array<std::string> s(10);
 
     ASSERT(a.getElement(0) == 0);
+    ASSERT(s.getElement(0).length() == 0);
 }
 
 TEST(Array_getElement_indexException)
@@ -398,6 +400,43 @@ TEST(Array_getElement_indexException)
     try
     {
         int result = a.getElement(1000);
+        ASSERT(0);
+    }
+    catch (jni::Exception&)
+    {
+        ASSERT(1);
+    }
+}
+
+TEST(Array_setElement_basicType)
+{
+    jni::Array<int> a(10);
+
+    for (int i = 0; i < 10; i++)
+        a.setElement(i, i);
+
+    for (int i = 0; i < 10; i++)
+        ASSERT(a.getElement(i) == i);
+}
+
+TEST(Array_setElement_string)
+{
+    jni::Array<std::wstring> a(10);
+
+    for (int i = 0; i < 10; i++)
+        a.setElement(i, std::to_wstring(i));
+
+    for (int i = 0; i < 10; i++)
+        ASSERT(a.getElement(i) == std::to_wstring(i));
+}
+
+TEST(Array_setElement_indexException)
+{
+    jni::Array<std::string> s(10);
+
+    try
+    {
+        auto result = s.getElement(1000);
         ASSERT(0);
     }
     catch (jni::Exception&)
@@ -528,6 +567,9 @@ int main()
         RUN_TEST(Array_moveConstructor);
         RUN_TEST(Array_getElement_defaultValue);
         RUN_TEST(Array_getElement_indexException);
+        RUN_TEST(Array_setElement_basicType);
+        RUN_TEST(Array_setElement_string);
+        RUN_TEST(Array_setElement_indexException);
 
         // Argument Type Tests
         RUN_TEST(Arg_bool);
