@@ -13,6 +13,7 @@ struct _jmethodID;
 struct _jfieldID;
 class  _jobject;
 class  _jclass;
+class  _jarray;
 
 namespace jni
 {
@@ -22,8 +23,9 @@ namespace jni
 #else
     typedef JNIEnv_     JNIEnv;
 #endif
-    typedef _jobject*   jobject;
-    typedef _jclass*    jclass;
+    typedef _jobject* jobject;
+    typedef _jclass* jclass;
+    typedef _jarray* jarray;
 
     /**
         You can save a method via its handle using Class::getMethod() if it is
@@ -75,23 +77,23 @@ namespace jni
             Signature Generation
          */
 
-        inline std::string valueSig(const void*)            { return "V"; }
-        inline std::string valueSig(const bool*)            { return "Z"; }
-        inline std::string valueSig(const wchar_t*)         { return "C"; }
-        inline std::string valueSig(const short*)           { return "S"; }
-        inline std::string valueSig(const int*)             { return "I"; }
-        inline std::string valueSig(const long long*)       { return "J"; }
-        inline std::string valueSig(const float*)           { return "F"; }
-        inline std::string valueSig(const double*)          { return "D"; }
-        inline std::string valueSig(const std::string*)     { return "Ljava/lang/String;"; }
-        inline std::string valueSig(const std::wstring*)    { return "Ljava/lang/String;"; }
-        inline std::string valueSig(const char* const*)     { return "Ljava/lang/String;"; }
-        inline std::string valueSig(const wchar_t* const*)  { return "Ljava/lang/String;"; }
+        inline std::string valueSig(const void*) { return "V"; }
+        inline std::string valueSig(const bool*) { return "Z"; }
+        inline std::string valueSig(const wchar_t*) { return "C"; }
+        inline std::string valueSig(const short*) { return "S"; }
+        inline std::string valueSig(const int*) { return "I"; }
+        inline std::string valueSig(const long long*) { return "J"; }
+        inline std::string valueSig(const float*) { return "F"; }
+        inline std::string valueSig(const double*) { return "D"; }
+        inline std::string valueSig(const std::string*) { return "Ljava/lang/String;"; }
+        inline std::string valueSig(const std::wstring*) { return "Ljava/lang/String;"; }
+        inline std::string valueSig(const char* const*) { return "Ljava/lang/String;"; }
+        inline std::string valueSig(const wchar_t* const*) { return "Ljava/lang/String;"; }
         std::string valueSig(const Object* obj);
         inline std::string valueSig(const Object* const* obj) { return valueSig(obj ? *obj : nullptr); }
 
         template <int n, class TArg>
-        inline std::string valueSig(const TArg (*arg)[n]) { return valueSig((const TArg* const*) arg); }
+        inline std::string valueSig(const TArg(*arg)[n]) { return valueSig((const TArg* const*)arg); }
 
         inline std::string sig() { return ""; }
 
@@ -159,6 +161,8 @@ namespace jni
 
             value_t values[sizeof...(TArgs)];
         };
+
+        long getArrayLength(jarray array);
     }
 
     /**
@@ -180,7 +184,7 @@ namespace jni
         /** Flags which can be passed to the Object constructor. */
         enum ScopeFlags
         {
-            Temporary        = 1,    ///< Temporary object. Do not create a global reference.
+            Temporary = 1,    ///< Temporary object. Do not create a global reference.
             DeleteLocalInput = 2     ///< The input reference is temporary and can be deleted.
         };
 
@@ -209,7 +213,7 @@ namespace jni
          */
         Object(jobject ref, int scopeFlags = 0);
 
-        /** 
+        /**
             Destructor. Releases this reference on the Java Object so it can be
             picked up by the garbage collector.
          */
@@ -358,7 +362,8 @@ namespace jni
         bool isNull() const noexcept;
 
         /**
-            Gets a handle for this Object's class.
+            Gets a handle for this Object's class. Ideally, this should just return a Class,
+            but C++ won't let us do that that.
             \return The Object's Class's handle.
          */
         jclass getClass() const;
@@ -401,7 +406,7 @@ namespace jni
             \param ref The JNI class reference.
             \param scopeFlags Bitmask of Object::ScopeFlags.
          */
-        Class(jclass ref, int scopeFlags = 0);
+        Class(jclass ref, int scopeFlags = Temporary);
 
         /**
             Tells whether this Class is null or valid.
@@ -692,6 +697,12 @@ namespace jni
             set(field, value);
         }
 
+        /**
+            Gets the underlying JNI jclass handle.
+            \return The JNI handle.
+         */
+        jclass getHandle() const noexcept { return jclass(Object::getHandle()); }
+
     private:
         // Helper Functions
         template <class TType> TType callStaticMethod(method_t method, internal::value_t* values) const;
@@ -724,9 +735,121 @@ namespace jni
     };
 
     /**
+        Used to interact with native Java arrays. The element type can be any primitive
+        type, jni::Object, std::string or std::wstring.
+     */
+    template <class TElement>
+    class Array : public Object
+    {
+    public:
+        /**
+            Default constructor. Creates a null array reference.
+         */
+        Array() noexcept;
+
+        /**
+            Creates a Array object by JNI reference.
+            \param ref The JNI array reference.
+            \param scopeFlags Bitmask of Object::ScopeFlags.
+         */
+        Array(jarray ref, int scopeFlags = Temporary);
+
+        /**
+            Creates an Array of the given length. The elements are default initialised
+            to zero / null values.
+            \param length The Array length.
+         */
+        Array(long length);
+
+        /**
+            Creates an Array of the given length. A Class type is also specified, but can
+            be left null to default to "java.lang.Object".
+            \param length The Array length.
+            \param type The element type.
+
+         */
+        Array(long length, const Class& type);
+
+        /**
+            Copy constructor. Shares a reference to the Java array with the
+            copied Array object.
+            \param other The Array to copy.
+         */
+        Array(const Array<TElement>& other);
+
+        /**
+            Move constructor. Moves the array reference to the new Array, and leaves
+            the previous Array as a null reference.
+            \param other The Array to move.
+         */
+        Array(Array<TElement>&& other) noexcept;
+
+        /**
+            Assignment operator. Copies the array reference from the supplied
+            Array. They will now both point to the same Java array.
+            \param other The Array to copy.
+            \return This Array.
+         */
+        Array<TElement>& operator=(const Array<TElement>& other);
+
+        /**
+            Assignment operator. Moves the array reference from the supplied
+            Array to this one, and leaves the other one as a null.
+            \param other The Array to move.
+            \return This Array.
+         */
+        Array<TElement>& operator=(Array<TElement>&& other);
+
+        /**
+            Checks whether these Arrays both reference the same java array.
+            \param other The Array to compare with.
+            \return true if the same (or both null), false otherwise.
+         */
+        bool operator==(const Array<TElement>& other) const { return Object::operator==(other); }
+
+        /**
+            Checks whether these Arrays reference different the java arrays.
+            \param other The Array to compare with.
+            \return false if the same (or both null), true otherwise.
+         */
+        bool operator!=(const Array<TElement>& other) const { return !operator==(other); }
+
+        /**
+            Sets the element value at the given index in the Array.
+            \param index The zero-based index.
+            \param value The value to set.
+         */
+        void setElement(long index, TElement value);
+
+        /**
+            Gets the value at the given index within the Array.
+            \param index The zero-based index.
+            \return The element at the given index.
+         */
+        TElement getElement(long index) const;
+        TElement operator[](long index) const { return getElement(index); }
+
+        /**
+            Gets the length of this Array.
+            \return The array length.
+         */
+        long getLength() const;
+
+        /**
+            Gets the underlying JNI jarray handle.
+            \return The JNI handle.
+         */
+        jarray getHandle() const noexcept { return jarray(Object::getHandle()); }
+
+    private:
+        // Instance Variables
+        mutable long _length;   ///< Mutable as it may only finally get set in a getLength() call.
+    };
+
+    /**
         When the application's entry point is in C++ rather than in Java, it will
         need to spin up its own instance of the Java Virtual Machine (JVM) before
-        it can initialize the Java Native Interface. Vm is used to create and 
+        it can initialize the Java Native Interface. Vm is used to create and
         destroy a running JVM instance.
 
         It uses the RAII idiom, so when the destructor is called, the Vm is shut
@@ -739,7 +862,7 @@ namespace jni
     {
     public:
         /**
-            Starts the Java Virtual Machine. 
+            Starts the Java Virtual Machine.
             \param path The path to the jvm.dll (or null for auto-detect).
          */
         Vm(const char* path = nullptr);
@@ -786,6 +909,68 @@ namespace jni
          */
         InitializationException(const char* msg) : Exception(msg) {}
     };
+
+    /*
+        Array Implementation
+     */
+
+    template <class TElement>
+    Array<TElement>::Array() noexcept : Object(), _length(0)
+    {
+    }
+
+    template <class TElement>
+    Array<TElement>::Array(jarray ref, int scopeFlags) : Object(ref, scopeFlags), _length(-1)
+    {
+    }
+
+    template <class TElement>
+    Array<TElement>::Array(const Array<TElement>& other) : Object(other), _length(other._length)
+    {
+    }
+
+    template <class TElement>
+    Array<TElement>::Array(Array<TElement>&& other) noexcept : Object((Object&&)other), _length(other._length)
+    {
+        other._length = 0;
+    }
+
+    template <class TElement>
+    Array<TElement>& Array<TElement>::operator=(const Array<TElement>& other)
+    {
+        if (&other != this)
+        {
+            Object::operator=(other);
+            _length = other._length;
+        }
+
+        return *this;
+    }
+
+    template <class TElement>
+    Array<TElement>& Array<TElement>::operator=(Array<TElement>&& other)
+    {
+        if (&other != this)
+        {
+            Object::operator=((Object&&) other);
+            _length = other._length;
+
+            other._length = 0;
+        }
+
+        return *this;
+    }
+
+    template <class TElement>
+    long Array<TElement>::getLength() const
+    {
+        if (_length < 0)
+        {
+            _length = internal::getArrayLength(getHandle());
+        }
+
+        return _length;
+    }
 }
 
 #endif // _JNIPP_H_

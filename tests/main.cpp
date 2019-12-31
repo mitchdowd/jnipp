@@ -7,6 +7,11 @@
 // Local Dependencies
 #include "testing.h"
 
+/*
+    jni::Vm Tests
+ */
+
+
 TEST(Vm_detectsJreInstall)
 {
     try
@@ -37,6 +42,11 @@ TEST(Vm_notAllowedMultipleVms)
 
     ASSERT(0);
 }
+
+/*
+    jni::Class Tests
+ */
+
 
 TEST(Class_findByName)
 {
@@ -174,6 +184,11 @@ TEST(Class_call_staticMethod_byName)
     ASSERT(d == 123.0);    // Warning: floating point comparison.
 }
 
+/*
+    jni::Object Tests
+ */
+
+
 TEST(Object_defaultConstructor_isNull)
 {
     jni::Object o;
@@ -265,6 +280,11 @@ TEST(Object_call_byNameWithArgs)
     ASSERT(str2.call<wchar_t>("charAt", 1) == L'e');
 }
 
+/*
+    jni::Enum Tests
+ */
+
+
 TEST(Enum_get)
 {
     jni::Class Thread("java/lang/Thread");
@@ -277,6 +297,158 @@ TEST(Enum_get)
 
     ASSERT(state == State.get("RUNNABLE"));
 }
+
+/*
+    jni::Array Tests
+ */
+
+TEST(Array_defaultConstructor)
+{
+    jni::Array<int> a;
+
+    ASSERT(a.getLength() == 0);
+    ASSERT(a.isNull());
+}
+
+TEST(Array_constructor)
+{
+    jni::Array<int> a(10);
+
+    ASSERT(a.getLength() == 10);
+    ASSERT(!a.isNull());
+}
+
+TEST(Array_constructor_eachType)
+{
+    jni::Array<bool> b(10);
+    jni::Array<wchar_t> c(10);
+    jni::Array<short> s(10);
+    jni::Array<int> i(10);
+    jni::Array<long long> l(10);
+    jni::Array<float> f(10);
+    jni::Array<double> d(10);
+    jni::Array<std::string> str(10);
+    jni::Array<std::wstring> wstr(10);
+    jni::Array<jni::Object> obj(10);
+    jni::Array<jni::Object> obj2(10, jni::Class("java/lang/Integer"));
+
+    jni::Object* objs[] = { &b, &c, &s, &i, &l, &f, &d, &str, &wstr, &obj, &obj2 };
+
+    for (auto o : objs)
+        ASSERT(!o->isNull());
+}
+
+TEST(Array_constructor_withType)
+{
+    jni::Array<jni::Object> a(10, jni::Class("java/lang/Integer"));
+
+    ASSERT(a.getLength() == 10);
+    ASSERT(!a.isNull());
+}
+
+TEST(Array_copyConstructor)
+{
+    jni::Array<int> a(10);
+    jni::Array<int> b = a;
+
+    ASSERT(a == b);
+}
+
+TEST(Array_moveConstructor)
+{
+    jni::Array<int> a(10);
+    jni::Array<int> b = std::move(a);
+
+    ASSERT(a.isNull());
+    ASSERT(!b.isNull());
+}
+
+TEST(Array_copyAssignmentOperator)
+{
+    jni::Array<int> a(10);
+    jni::Array<int> b(11);
+
+    a = b;
+
+    ASSERT(a == b);
+}
+
+TEST(Array_moveAssignmentOperator)
+{
+    jni::Array<int> a(10);
+    jni::Array<int> b(11);
+
+    a = std::move(b);
+
+    ASSERT(!a.isNull());
+    ASSERT(b.isNull());
+}
+
+TEST(Array_getElement_defaultValue)
+{
+    jni::Array<int> a(10);
+    jni::Array<std::string> s(10);
+
+    ASSERT(a.getElement(0) == 0);
+    ASSERT(s.getElement(0).length() == 0);
+}
+
+TEST(Array_getElement_indexException)
+{
+    jni::Array<int> a(10);
+
+    try
+    {
+        int result = a.getElement(1000);
+        ASSERT(0);
+    }
+    catch (jni::Exception&)
+    {
+        ASSERT(1);
+    }
+}
+
+TEST(Array_setElement_basicType)
+{
+    jni::Array<int> a(10);
+
+    for (int i = 0; i < 10; i++)
+        a.setElement(i, i);
+
+    for (int i = 0; i < 10; i++)
+        ASSERT(a.getElement(i) == i);
+}
+
+TEST(Array_setElement_string)
+{
+    jni::Array<std::wstring> a(10);
+
+    for (int i = 0; i < 10; i++)
+        a.setElement(i, std::to_wstring(i));
+
+    for (int i = 0; i < 10; i++)
+        ASSERT(a.getElement(i) == std::to_wstring(i));
+}
+
+TEST(Array_setElement_indexException)
+{
+    jni::Array<std::string> s(10);
+
+    try
+    {
+        auto result = s.getElement(1000);
+        ASSERT(0);
+    }
+    catch (jni::Exception&)
+    {
+        ASSERT(1);
+    }
+}
+
+/*
+    Argument Type Tests
+ */
+
 
 TEST(Arg_bool)
 {
@@ -385,6 +557,19 @@ int main()
 
         // jni::Enum Tests
         RUN_TEST(Enum_get);
+
+        // jni::Array Tests
+        RUN_TEST(Array_defaultConstructor);
+        RUN_TEST(Array_constructor);
+        RUN_TEST(Array_constructor_eachType);
+        RUN_TEST(Array_constructor_withType);
+        RUN_TEST(Array_copyConstructor);
+        RUN_TEST(Array_moveConstructor);
+        RUN_TEST(Array_getElement_defaultValue);
+        RUN_TEST(Array_getElement_indexException);
+        RUN_TEST(Array_setElement_basicType);
+        RUN_TEST(Array_setElement_string);
+        RUN_TEST(Array_setElement_indexException);
 
         // Argument Type Tests
         RUN_TEST(Arg_bool);
