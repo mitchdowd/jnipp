@@ -815,6 +815,13 @@ namespace jni
         bool operator!=(const Array<TElement>& other) const { return !operator==(other); }
 
         /**
+            Gets the value at the given index within the Array.
+            \param index The zero-based index.
+            \return The element at the given index.
+         */
+        TElement getElement(long index) const;
+
+        /**
             Gets the length of this Array.
             \return The array length.
          */

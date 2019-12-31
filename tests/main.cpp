@@ -384,6 +384,28 @@ TEST(Array_moveAssignmentOperator)
     ASSERT(b.isNull());
 }
 
+TEST(Array_getElement_defaultValue)
+{
+    jni::Array<int> a(10);
+
+    ASSERT(a.getElement(0) == 0);
+}
+
+TEST(Array_getElement_indexException)
+{
+    jni::Array<int> a(10);
+
+    try
+    {
+        int result = a.getElement(1000);
+        ASSERT(0);
+    }
+    catch (jni::Exception&)
+    {
+        ASSERT(1);
+    }
+}
+
 /*
     Argument Type Tests
  */
@@ -504,6 +526,8 @@ int main()
         RUN_TEST(Array_constructor_withType);
         RUN_TEST(Array_copyConstructor);
         RUN_TEST(Array_moveConstructor);
+        RUN_TEST(Array_getElement_defaultValue);
+        RUN_TEST(Array_getElement_indexException);
 
         // Argument Type Tests
         RUN_TEST(Arg_bool);

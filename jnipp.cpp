@@ -1029,6 +1029,83 @@ namespace jni
     {
     }
 
+    template <> bool Array<bool>::getElement(long index) const
+    {
+        jboolean output;
+        env()->GetBooleanArrayRegion(jbooleanArray(getHandle()), index, 1, &output);
+        handleJavaExceptions();
+        return output;
+    }
+
+    template <> wchar_t Array<wchar_t>::getElement(long index) const
+    {
+        jchar output;
+        env()->GetCharArrayRegion(jcharArray(getHandle()), index, 1, &output);
+        handleJavaExceptions();
+        return output;
+    }
+
+    template <> short Array<short>::getElement(long index) const
+    {
+        jshort output;
+        env()->GetShortArrayRegion(jshortArray(getHandle()), index, 1, &output);
+        handleJavaExceptions();
+        return output;
+    }
+
+    template <> int Array<int>::getElement(long index) const
+    {
+        jint output;
+        env()->GetIntArrayRegion(jintArray(getHandle()), index, 1, &output);
+        handleJavaExceptions();
+        return output;
+    }
+
+    template <> long long Array<long long>::getElement(long index) const
+    {
+        jlong output;
+        env()->GetLongArrayRegion(jlongArray(getHandle()), index, 1, &output);
+        handleJavaExceptions();
+        return output;
+    }
+
+    template <> float Array<float>::getElement(long index) const
+    {
+        jfloat output;
+        env()->GetFloatArrayRegion(jfloatArray(getHandle()), index, 1, &output);
+        handleJavaExceptions();
+        return output;
+    }
+
+    template <> double Array<double>::getElement(long index) const
+    {
+        jdouble output;
+        env()->GetDoubleArrayRegion(jdoubleArray(getHandle()), index, 1, &output);
+        handleJavaExceptions();
+        return output;
+    }
+
+    template <> std::string Array<std::string>::getElement(long index) const
+    {
+        jobject output = env()->GetObjectArrayElement(jobjectArray(getHandle()), index);
+        handleJavaExceptions();
+        return toString(output);
+    }
+
+    template <> std::wstring Array<std::wstring>::getElement(long index) const
+    {
+        jobject output = env()->GetObjectArrayElement(jobjectArray(getHandle()), index);
+        handleJavaExceptions();
+        return toWString(output);
+    }
+
+    template <> Object Array<Object>::getElement(long index) const
+    {
+        jobject output = env()->GetObjectArrayElement(jobjectArray(getHandle()), index);
+        handleJavaExceptions();
+        return Object(output, DeleteLocalInput);
+    }
+
     /*
         Vm Implementation
      */
@@ -1194,7 +1271,7 @@ namespace jni
         void valueArg(value_t* v, double a)                 { ((jvalue*) v)->d = a; }
         void valueArg(value_t* v, jobject a)                { ((jvalue*) v)->l = a; }
         void valueArg(value_t* v, const Object& a)          { ((jvalue*) v)->l = a.getHandle(); }
-        void valueArg(value_t* v, const Object* const& a)    { ((jvalue*) v)->l = a ? a->getHandle() : nullptr; }
+        void valueArg(value_t* v, const Object* const& a)   { ((jvalue*) v)->l = a ? a->getHandle() : nullptr; }
 
         /*
             Object Implementations
