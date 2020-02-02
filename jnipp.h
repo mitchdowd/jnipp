@@ -920,7 +920,7 @@ namespace jni
     }
 
     template <class TElement>
-    Array<TElement>::Array(jarray ref, int scopeFlags) : Object(ref, scopeFlags), _length(-1)
+    Array<TElement>::Array(jarray ref, int scopeFlags) : Object((jobject) ref, scopeFlags), _length(-1)
     {
     }
 
