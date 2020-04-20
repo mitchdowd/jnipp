@@ -365,6 +365,13 @@ namespace jni
         env()->SetBooleanField(_handle, field, value);
     }
 
+    template <> byte_t Object::callMethod(method_t method, internal::value_t* args) const
+    {
+        auto result = env()->CallByteMethodA(_handle, method, (jvalue*) args);
+        handleJavaExceptions();
+        return result;
+    }
+
     template <> wchar_t Object::callMethod(method_t method, internal::value_t* args) const
     {
         auto result = env()->CallCharMethodA(_handle, method, (jvalue*) args);
@@ -428,6 +435,11 @@ namespace jni
         return Object(result, DeleteLocalInput);
     }
 
+    template <> byte_t Object::get(field_t field) const
+    {
+        return env()->GetByteField(_handle, field);
+    }
+
     template <> wchar_t Object::get(field_t field) const
     {
         return env()->GetCharField(_handle, field);
@@ -471,6 +483,11 @@ namespace jni
     template <> Object Object::get(field_t field) const
     {
         return Object(env()->GetObjectField(_handle, field), DeleteLocalInput);
+    }
+
+    template <> void Object::set(field_t field, const byte_t& value)
+    {
+        env()->SetByteField(_handle, field, value);
     }
 
     template <> void Object::set(field_t field, const wchar_t& value)
@@ -693,6 +710,11 @@ namespace jni
         return env()->GetStaticBooleanField(getHandle(), field) != 0;
     }
 
+    template <> byte_t Class::get(field_t field) const
+    {
+        return env()->GetStaticByteField(getHandle(), field);
+    }
+
     template <> wchar_t Class::get(field_t field) const
     {
         return env()->GetStaticCharField(getHandle(), field);
@@ -741,6 +763,11 @@ namespace jni
     template <> void Class::set(field_t field, const bool& value)
     {
         env()->SetStaticBooleanField(getHandle(), field, value);
+    }
+
+    template <> void Class::set(field_t field, const byte_t& value)
+    {
+        env()->SetStaticByteField(getHandle(), field, value);
     }
 
     template <> void Class::set(field_t field, const wchar_t& value)
@@ -819,6 +846,13 @@ namespace jni
         return result != 0;
     }
 
+    template <> byte_t Class::callStaticMethod(method_t method, internal::value_t* args) const
+    {
+        auto result = env()->CallStaticByteMethodA(getHandle(), method, (jvalue*) args);
+        handleJavaExceptions();
+        return result;
+    }
+
     template <> wchar_t Class::callStaticMethod(method_t method, internal::value_t* args) const
     {
         auto result = env()->CallStaticCharMethodA(getHandle(), method, (jvalue*) args);
@@ -893,6 +927,13 @@ namespace jni
         auto result = env()->CallNonvirtualBooleanMethodA(obj, getHandle(), method, (jvalue*) args);
         handleJavaExceptions();
         return result != 0;
+    }
+
+    template <> byte_t Class::callExactMethod(jobject obj, method_t method, internal::value_t* args) const
+    {
+        auto result = env()->CallNonvirtualByteMethodA(obj, getHandle(), method, (jvalue*) args);
+        handleJavaExceptions();
+        return result;
     }
 
     template <> wchar_t Class::callExactMethod(jobject obj, method_t method, internal::value_t* args) const
@@ -989,6 +1030,10 @@ namespace jni
     {
     }
 
+    template <> Array<byte_t>::Array(long length) : Object(env()->NewByteArray(length)), _length(length)
+    {
+    }
+
     template <> Array<wchar_t>::Array(long length) : Object(env()->NewCharArray(length)), _length(length)
     {
     }
@@ -1033,6 +1078,14 @@ namespace jni
     {
         jboolean output;
         env()->GetBooleanArrayRegion(jbooleanArray(getHandle()), index, 1, &output);
+        handleJavaExceptions();
+        return output;
+    }
+
+    template <> byte_t Array<byte_t>::getElement(long index) const
+    {
+        jbyte output;
+        env()->GetByteArrayRegion(jbyteArray(getHandle()), index, 1, &output);
         handleJavaExceptions();
         return output;
     }
@@ -1110,6 +1163,13 @@ namespace jni
     {
         jboolean jvalue = value;
         env()->SetBooleanArrayRegion(jbooleanArray(getHandle()), index, 1, &jvalue);
+        handleJavaExceptions();
+    }
+
+    template <> void Array<byte_t>::setElement(long index, byte_t value)
+    {
+        jbyte jvalue = value;
+        env()->SetByteArrayRegion(jbyteArray(getHandle()), index, 1, &jvalue);
         handleJavaExceptions();
     }
 
@@ -1343,6 +1403,7 @@ namespace jni
     {
         // Base Type Conversions
         void valueArg(value_t* v, bool a)                   { ((jvalue*) v)->z = jboolean(a); }
+        void valueArg(value_t* v, byte_t a)                 { ((jvalue*) v)->b = a; }
         void valueArg(value_t* v, wchar_t a)                { ((jvalue*) v)->c = jchar(a); }    // Note: Possible truncation.
         void valueArg(value_t* v, short a)                  { ((jvalue*) v)->s = a; }
         void valueArg(value_t* v, int a)                    { ((jvalue*) v)->i = a; }

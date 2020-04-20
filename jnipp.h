@@ -45,6 +45,11 @@ namespace jni
      */
     typedef _jfieldID* field_t;
 
+    /**
+        Type used to denote the Java byte type.
+     */
+    typedef unsigned char byte_t;
+
 #ifdef JNIPP_EXCEPTION_CLASS
 
     /**
@@ -79,6 +84,7 @@ namespace jni
 
         inline std::string valueSig(const void*) { return "V"; }
         inline std::string valueSig(const bool*) { return "Z"; }
+        inline std::string valueSig(const byte_t*) { return "B"; }
         inline std::string valueSig(const wchar_t*) { return "C"; }
         inline std::string valueSig(const short*) { return "S"; }
         inline std::string valueSig(const int*) { return "I"; }
@@ -109,6 +115,7 @@ namespace jni
         typedef long long value_t;
 
         void valueArg(value_t* v, bool a);
+        void valueArg(value_t* v, byte_t a);
         void valueArg(value_t* v, wchar_t a);
         void valueArg(value_t* v, short a);
         void valueArg(value_t* v, int a);
