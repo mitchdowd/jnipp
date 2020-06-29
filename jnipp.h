@@ -138,7 +138,7 @@ namespace jni
             internal::args(values + 1, args...);
         }
 
-        template <class TArg> void cleanupArg(value_t* value) {}
+        template <class TArg> void cleanupArg(value_t* /* value */) {}
         template <>           void cleanupArg<std::string>(value_t* value);
         template <>           void cleanupArg<std::wstring>(value_t* value);
         template <>           void cleanupArg<const char*>(value_t* value);
@@ -151,7 +151,7 @@ namespace jni
         }
 
         template <>
-        inline void cleanupArgs<void>(value_t* values) {}
+        inline void cleanupArgs<void>(value_t* /* values */) {}
 
         template <class... TArgs>
         class ArgArray
