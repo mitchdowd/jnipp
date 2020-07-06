@@ -465,6 +465,18 @@ namespace jni
         field_t getField(const char* name, const char* signature) const;
 
         /**
+            Gets a handle to the field with the given name and the supplied type.
+            This handle can then be stored so that the field does not need to
+            be looked up by name again. It does not need to be deleted.
+            \param name The name of the field.
+            \return The field ID.
+         */
+        template<typename TType>
+        field_t getField(const char* name) const {
+            return getField(name, internal::valueSig((TType*) nullptr).c_str());
+        }
+
+        /**
             Gets a handle to the static field with the given name and type signature.
             This handle can then be stored so that the field does not need to
             be looked up by name again. It does not need to be deleted.
