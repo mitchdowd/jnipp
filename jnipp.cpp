@@ -1311,8 +1311,18 @@ namespace jni
 
 #else
 
-        // Best guess so far.
-        result = "/usr/lib/jvm/default-java/jre/lib/amd64/server/libjvm.so";
+        const char* javaHome = getenv("JAVA_HOME");
+        if (javaHome != nullptr) {
+            #ifdef __APPLE__
+            std::string libJvmPath = std::string(javaHome) + "/jre/lib/server/libjvm.dylib";
+            #else
+            std::string libJvmPath = std::string(javaHome) + "/jre/lib/amd64/server/libjvm.so";
+            #endif
+            result = libJvmPath;
+        } else {
+            // Best guess so far.
+            result = "/usr/lib/jvm/default-java/jre/lib/amd64/server/libjvm.so";
+        }
 
 #endif // _WIN32
 

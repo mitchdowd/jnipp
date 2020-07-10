@@ -1,0 +1,53 @@
+name: jnipp
+on:
+  [push]
+jobs:
+  windows:
+    name: windows
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v2
+        name: Checkout project
+      - uses: actions/setup-java@v1
+        with:
+          java-version: 1.8
+          java-package: jdk
+          architecture: x64
+      - name: Add msbuild to PATH
+        uses: microsoft/setup-msbuild@v1.0.0
+        with:
+          vs-version: 16.5
+      - name: Build
+        run: msbuild jnipp.sln /p:Platform=X64
+      - name: Test
+        run: .\x64\Debug\tests.exe
+  macos:
+    name: macos
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v2
+        name: Checkout project
+      - uses: actions/setup-java@v1
+        with:
+          java-version: 1.8
+          java-package: jdk
+          architecture: x64
+      - name: Build
+        run: make
+      - name: Test
+        run: ./test
+  ubuntu:
+    name: ubuntu
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        name: Checkout project
+      - uses: actions/setup-java@v1
+        with:
+          java-version: 1.8
+          java-package: jdk
+          architecture: x64
+      - name: Build
+        run: make
+      - name: Test
+        run: ./test
