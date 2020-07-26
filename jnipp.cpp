@@ -161,7 +161,10 @@ namespace jni
         jclass ref = env()->FindClass(name);
 
         if (ref == nullptr)
+        {
+            env()->ExceptionClear();
             throw NameResolutionException(name);
+        }
 
         return ref;
     }

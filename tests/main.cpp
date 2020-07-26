@@ -48,11 +48,26 @@ TEST(Vm_notAllowedMultipleVms)
  */
 
 
-TEST(Class_findByName)
+TEST(Class_findByName_success)
 {
     jni::Class cls("java/lang/String");
 
     ASSERT(!cls.isNull());
+}
+
+TEST(Class_findByName_failure)
+{
+    try
+    {
+        jni::Class cls("does/not/Exist");
+    }
+    catch (jni::NameResolutionException&)
+    {
+        ASSERT(1);
+        return;
+    }
+
+    ASSERT(0);
 }
 
 TEST(Class_getName)
@@ -530,7 +545,8 @@ int main()
         jni::Vm vm;
 
         // jni::Class Tests
-        RUN_TEST(Class_findByName);
+        RUN_TEST(Class_findByName_success);
+        RUN_TEST(Class_findByName_failure);
         RUN_TEST(Class_getName);
         RUN_TEST(Class_getParent);
         RUN_TEST(Class_newInstance);
