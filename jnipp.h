@@ -193,6 +193,11 @@ namespace jni
     void init(JavaVM* vm);
 
     /**
+        Get the appropriate JNI environment for this thread.
+     */
+    JNIEnv* env();
+
+    /**
         Object corresponds with a `java.lang.Object` instance. With an Object,
         you can then call Java methods, and access fields on the Object. To
         instantiate an Object of a given class, use the `Class` class.
