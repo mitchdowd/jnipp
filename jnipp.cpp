@@ -243,6 +243,14 @@ namespace jni
         }
     }
 
+    void init(JavaVM* vm) {
+        bool expected = false;
+
+        if (isVm.compare_exchange_strong(expected, true))
+        {
+            javaVm = vm;
+        }
+    }
     /*
         Object Implementation
      */
