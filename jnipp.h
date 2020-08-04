@@ -393,6 +393,12 @@ namespace jni
          */
         jobject getHandle() const noexcept { return _handle; }
 
+        /**
+            Create a local reference for the underlying JNI handle.
+            \return The local reference.
+         */
+        jobject makeLocalReference() const;
+
     private:
         // Helper Functions
         method_t getMethod(const char* name, const char* signature) const;
