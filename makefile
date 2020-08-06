@@ -11,7 +11,9 @@ else
   endif
 endif
 
-CXXFLAGS=-I. -I${JAVA_HOME}/include -I${JAVA_HOME}/include/$(OS_NAME) -ldl -std=c++11
+JAVA_HOME ?= /usr/lib/jvm/default-java
+
+CXXFLAGS=-I. -I$(JAVA_HOME)/include -I$(JAVA_HOME)/include/$(OS_NAME) -ldl -std=c++11
 
 SRC=jnipp.o main.o
 VPATH=tests
