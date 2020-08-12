@@ -19,4 +19,5 @@ cc_library_static {
     export_header_lib_headers: [
         "libjnipp-headers"
     ],
+    vendor_available: true,
 }
