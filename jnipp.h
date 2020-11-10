@@ -134,6 +134,7 @@ namespace jni
         void valueArg(value_t* v, const char* a);
         void valueArg(value_t* v, const std::wstring& a);
         void valueArg(value_t* v, const wchar_t* a);
+        void valueArg(value_t* v, std::nullptr_t);
 
         inline void args(value_t*) {}
 

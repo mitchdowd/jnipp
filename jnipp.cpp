@@ -1480,6 +1480,10 @@ namespace jni
             ((jvalue*) v)->l = env()->NewStringUTF(a);
         }
 
+        void valueArg(value_t* v, std::nullptr_t)
+        {
+            ((jvalue*) v)->l = nullptr;
+        }
 
         template <> void cleanupArg<const char*>(value_t* v)
         {
