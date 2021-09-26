@@ -295,6 +295,19 @@ TEST(Object_call_byNameWithArgs)
     ASSERT(str2.call<wchar_t>("charAt", 1) == L'e');
 }
 
+TEST(Object_makeLocalReference)
+{
+    jni::Object str = jni::Class("java/lang/String").newInstance("Testing");
+
+    jni::jobject local = str.makeLocalReference();
+    ASSERT(local != nullptr);
+    ASSERT(local != str.getHandle());
+
+    jni::Object fromLocal(local, jni::Object::DeleteLocalInput);
+    ASSERT(!fromLocal.isNull());
+    ASSERT(str == fromLocal);
+}
+
 /*
     jni::Enum Tests
  */
@@ -570,6 +583,7 @@ int main()
         RUN_TEST(Object_call_byName);
         RUN_TEST(Object_call_withArgs);
         RUN_TEST(Object_call_byNameWithArgs);
+        RUN_TEST(Object_makeLocalReference);
 
         // jni::Enum Tests
         RUN_TEST(Enum_get);

@@ -253,3 +253,6 @@ paket-files/
 *.out
 *.o
 /test
+
+# Gradle
+.gradle/

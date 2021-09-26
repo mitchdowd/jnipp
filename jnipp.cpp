@@ -243,6 +243,14 @@ namespace jni
         }
     }
 
+    void init(JavaVM* vm) {
+        bool expected = false;
+
+        if (isVm.compare_exchange_strong(expected, true))
+        {
+            javaVm = vm;
+        }
+    }
     /*
         Object Implementation
      */
@@ -605,6 +613,13 @@ namespace jni
     field_t Object::getField(const char* name, const char* signature) const
     {
         return Class(getClass(), Temporary).getField(name, signature);
+    }
+
+    jobject Object::makeLocalReference() const 
+    {
+        if (isNull())
+            return nullptr;
+        return env()->NewLocalRef(_handle);
     }
 
     /*
@@ -1465,6 +1480,10 @@ namespace jni
             ((jvalue*) v)->l = env()->NewStringUTF(a);
         }
 
+        void valueArg(value_t* v, std::nullptr_t)
+        {
+            ((jvalue*) v)->l = nullptr;
+        }
 
         template <> void cleanupArg<const char*>(value_t* v)
         {

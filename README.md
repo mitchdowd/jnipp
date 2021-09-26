@@ -1,5 +1,4 @@
-Java Native Interface for C++
-=============================
+# Java Native Interface for C++
 
 ## Overview
 
@@ -17,9 +16,10 @@ should be implemented - the more likely it is that I will add your feature.
 ## Requirements
 
 To compile you will need:
- - A C++11 compatible compiler
- - An installation of the Java Development Kit (JDK)
- - The `JAVA_HOME` environment variable, directed to your JDK installation.
+
+- A C++11 compatible compiler
+- An installation of the Java Development Kit (JDK)
+- The `JAVA_HOME` environment variable, directed to your JDK installation.
 
 ## Usage
 
@@ -27,8 +27,9 @@ To compile you will need:
 > in the project source code.
 
 There are two situations where the Java Native Interface would be needed.
- - A Java application calling C/C++ functions; or
- - A C/C++ application calling Java methods
+
+- A Java application calling C/C++ functions; or
+- A C/C++ application calling Java methods
 
 ### Calling Java from C++
 
@@ -41,14 +42,14 @@ int main()
 {
     // An instance of the Java VM needs to be created.
     jni::Vm vm;
-	
+
     // Create an instance of java.lang.Integer
     jni::Class Integer = jni::Class("java/lang/Integer");
     jni::Object i = Integer.newInstance("1000");
-	
+
     // Call the `toString` method on that integer
     std::string str = i.call<std::string>("toString");
-	
+
     // The Java VM is automatically destroyed when it goes out of scope.
     return 0;
 }
@@ -69,10 +70,11 @@ class Demo {
         demo.value = 1000;
         demo.run();
     }
-	
+
     public native void run();
 }
 ```
+
 A matching C++ library which uses *jnipp* could look like:
 
 ```C++
@@ -89,10 +91,10 @@ extern "C" void Java_com_example_Demo_run(jni::JNIEnv* env, jni::jobject obj)
 {
     // jnipp only needs initialising once, but it doesn't hurt to do it again.
     jni::init(env);
-	
+
     // Capture the supplied object.
     jni::Object demo(obj);
-	
+
     // Print the contents of the `value` field to stdout.
     std::cout << demo.get<int>("value") << std::endl;
 }

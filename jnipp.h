@@ -9,6 +9,8 @@
 // Forward Declarations
 struct JNIEnv_;
 struct _JNIEnv;
+struct JavaVM_;
+struct _JavaVM;
 struct _jmethodID;
 struct _jfieldID;
 class  _jobject;
@@ -20,9 +22,12 @@ namespace jni
     // JNI Base Types
 #ifdef __ANDROID__
     typedef _JNIEnv     JNIEnv;
+    typedef _JavaVM JavaVM;
 #else
     typedef JNIEnv_     JNIEnv;
+    typedef JavaVM_ JavaVM;
 #endif
+
     typedef _jobject* jobject;
     typedef _jclass* jclass;
     typedef _jarray* jarray;
@@ -129,6 +134,7 @@ namespace jni
         void valueArg(value_t* v, const char* a);
         void valueArg(value_t* v, const std::wstring& a);
         void valueArg(value_t* v, const wchar_t* a);
+        void valueArg(value_t* v, std::nullptr_t);
 
         inline void args(value_t*) {}
 
@@ -138,7 +144,7 @@ namespace jni
             internal::args(values + 1, args...);
         }
 
-        template <class TArg> void cleanupArg(value_t* value) {}
+        template <class TArg> void cleanupArg(value_t* /* value */) {}
         template <>           void cleanupArg<std::string>(value_t* value);
         template <>           void cleanupArg<std::wstring>(value_t* value);
         template <>           void cleanupArg<const char*>(value_t* value);
@@ -151,7 +157,7 @@ namespace jni
         }
 
         template <>
-        inline void cleanupArgs<void>(value_t* values) {}
+        inline void cleanupArgs<void>(value_t* /* values */) {}
 
         template <class... TArgs>
         class ArgArray
@@ -179,6 +185,18 @@ namespace jni
         \param env A JNI environment handle.
      */
     void init(JNIEnv* env);
+    /**
+        Initialises the Java Native Interface with the given JavaVM handle,
+        which may be accessible. This (or the other overload) only needs to be
+        done once per process - further calls are no-ops.
+        \param vm A JNI VM handle.
+     */
+    void init(JavaVM* vm);
+
+    /**
+        Get the appropriate JNI environment for this thread.
+     */
+    JNIEnv* env();
 
     /**
         Object corresponds with a `java.lang.Object` instance. With an Object,
@@ -381,6 +399,12 @@ namespace jni
          */
         jobject getHandle() const noexcept { return _handle; }
 
+        /**
+            Create a local reference for the underlying JNI handle.
+            \return The local reference.
+         */
+        jobject makeLocalReference() const;
+
     private:
         // Helper Functions
         method_t getMethod(const char* name, const char* signature) const;
@@ -401,6 +425,11 @@ namespace jni
     class Class : protected Object
     {
     public:
+        /**
+            Creates a null class reference.
+         */
+        Class() : Object() {}
+
         /**
             Obtains a class reference to the Java class with the given qualified
             name.
@@ -465,6 +494,18 @@ namespace jni
         field_t getField(const char* name, const char* signature) const;
 
         /**
+            Gets a handle to the field with the given name and the supplied type.
+            This handle can then be stored so that the field does not need to
+            be looked up by name again. It does not need to be deleted.
+            \param name The name of the field.
+            \return The field ID.
+         */
+        template<typename TType>
+        field_t getField(const char* name) const {
+            return getField(name, internal::valueSig((TType*) nullptr).c_str());
+        }
+
+        /**
             Gets a handle to the static field with the given name and type signature.
             This handle can then be stored so that the field does not need to
             be looked up by name again. It does not need to be deleted.
@@ -473,6 +514,18 @@ namespace jni
             \return The field ID.
          */
         field_t getStaticField(const char* name, const char* signature) const;
+
+        /**
+            Gets a handle to the static field with the given name and the supplied type.
+            This handle can then be stored so that the field does not need to
+            be looked up by name again. It does not need to be deleted.
+            \param name The name of the field.
+            \return The field ID.
+         */
+        template<typename TType>
+        field_t getStaticField(const char* name) const {
+            return getStaticField(name, internal::valueSig((TType*)nullptr).c_str());
+        }
 
         /**
             Gets a handle to the method with the given name and signature.
