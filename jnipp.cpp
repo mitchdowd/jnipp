@@ -26,6 +26,10 @@ namespace jni
     static std::atomic_bool isVm(false);
     static JavaVM* javaVm = nullptr;
 
+    static bool isAttached(JavaVM *vm) {
+        JNIEnv *env = nullptr;
+        return vm->GetEnv((void **)&env, JNI_VERSION_1_2) == JNI_OK;
+    }
     /**
         Maintains the lifecycle of a JNIEnv.
      */
@@ -59,7 +63,7 @@ namespace jni
         if (vm == nullptr)
             throw InitializationException("JNI not initialized");
 
-        if (vm->GetEnv((void**)&_env, JNI_VERSION_1_2) != JNI_OK)
+        if (!isAttached(vm))
         {
 #ifdef __ANDROID__
             if (vm->AttachCurrentThread(&_env, nullptr) != 0)
@@ -152,8 +156,17 @@ namespace jni
     {
         static thread_local ScopedEnv env;
 
+        if (env.get() != nullptr && !isAttached(javaVm))
+        {
+            // we got detached, so clear it.
+            // will be re-populated from static javaVm below.
+            env = ScopedEnv{};
+        }
+
         if (env.get() == nullptr)
+        {
             env.init(javaVm);
+        }
 
         return env.get();
     }
