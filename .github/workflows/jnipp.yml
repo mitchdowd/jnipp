@@ -21,6 +21,15 @@ jobs:
         run: msbuild jnipp.sln /p:Platform=X64
       - name: Test
         run: .\x64\Debug\tests.exe
+
+      - name: CMake Configure
+        run: cmake -A x64 -S . -B build
+      - name: CMake Build
+        run: cmake --build build --config Debug
+      - name: CMake Test
+        run: ctest -V -C Debug --output-on-failure
+        working-directory: build
+
   macos:
     name: macos
     runs-on: macos-latest
@@ -36,6 +45,16 @@ jobs:
         run: make
       - name: Test
         run: ./test
+
+      - name: CMake Configure
+        run: cmake -G "Unix Makefiles" -S . -B build
+      - name: CMake Build
+        run: make
+        working-directory: build
+      - name: CMake Test
+        run: ctest -V --output-on-failure
+        working-directory: build
+
   ubuntu:
     name: ubuntu
     runs-on: ubuntu-latest
@@ -51,3 +70,12 @@ jobs:
         run: make
       - name: Test
         run: ./test
+
+      - name: CMake Configure
+        run: cmake -G "Unix Makefiles" -S . -B build
+      - name: CMake Build
+        run: make
+        working-directory: build
+      - name: CMake Test
+        run: ctest -V --output-on-failure
+        working-directory: build
