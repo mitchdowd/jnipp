@@ -26,9 +26,13 @@ namespace jni
     static std::atomic_bool isVm(false);
     static JavaVM* javaVm = nullptr;
 
+    static bool getEnv(JavaVM *vm, JNIEnv **env) {
+        return vm->GetEnv((void **)env, JNI_VERSION_1_2) == JNI_OK;
+    }
+
     static bool isAttached(JavaVM *vm) {
         JNIEnv *env = nullptr;
-        return vm->GetEnv((void **)&env, JNI_VERSION_1_2) == JNI_OK;
+        return getEnv(vm, &env);
     }
     /**
         Maintains the lifecycle of a JNIEnv.
@@ -63,7 +67,7 @@ namespace jni
         if (vm == nullptr)
             throw InitializationException("JNI not initialized");
 
-        if (!isAttached(vm))
+        if (!getEnv(vm, &_env))
         {
 #ifdef __ANDROID__
             if (vm->AttachCurrentThread(&_env, nullptr) != 0)
