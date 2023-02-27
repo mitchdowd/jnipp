@@ -223,6 +223,10 @@ namespace jni
      */
     JNIEnv* env();
 
+    // Forward declaration
+    template <class TElement>
+    class Array;
+
     /**
         Object corresponds with a `java.lang.Object` instance. With an Object,
         you can then call Java methods, and access fields on the Object. To
@@ -452,7 +456,10 @@ namespace jni
         std::string callMethod(method_t method, internal::value_t* args, internal::ReturnTypeWrapper<std::string> const&) const;
         std::wstring callMethod(method_t method, internal::value_t* args, internal::ReturnTypeWrapper<std::wstring> const&) const;
         jni::Object callMethod(method_t method, internal::value_t* args, internal::ReturnTypeWrapper<jni::Object> const&) const;
+        jarray callMethod(method_t method, internal::value_t* args, internal::ReturnTypeWrapper<jarray> const&) const;
 
+        template<typename T>
+        jni::Array<T> callMethod(method_t method, internal::value_t* args, internal::ReturnTypeWrapper<jni::Array<T>> const&) const;
 
         void getFieldValue(field_t field, internal::ReturnTypeWrapper<void> const&) const;
         bool getFieldValue(field_t field, internal::ReturnTypeWrapper<bool> const&) const;
@@ -1024,6 +1031,17 @@ namespace jni
          */
         InitializationException(const char* msg) : Exception(msg) {}
     };
+
+    /*
+        Call method returning array: implementation
+    */
+    template <typename T>
+    inline jni::Array<T> Object::callMethod(method_t method, internal::value_t* args,
+                                            internal::ReturnTypeWrapper<jni::Array<T>> const&) const
+    {
+        jarray result = callMethod(method, args, internal::ReturnTypeWrapper<jarray>{});
+        return jni::Array<T>(result, DeleteLocalInput);
+    }
 
     /*
         Array Implementation
