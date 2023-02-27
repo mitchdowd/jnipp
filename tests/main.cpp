@@ -307,11 +307,16 @@ TEST(Object_call_byNameWithArgs)
 TEST(Object_call_returningArray) {
     jni::Object str = jni::Class("java/lang/String").newInstance("Testing");
 
-    // TODO cannot deduce the right signature for an array
-    auto getBytes =
-        jni::Class("java/lang/String").getMethod("getBytes", "()[B");
-    auto bytes = str.call<jni::Array<jni::byte_t>>(getBytes);
-    ASSERT(bytes.getLength() == 7);
+    {
+        auto getBytes =
+            jni::Class("java/lang/String").getMethod("getBytes", "()[B");
+        auto bytes = str.call<jni::Array<jni::byte_t>>(getBytes);
+        ASSERT(bytes.getLength() == 7);
+    }
+    {
+        auto bytes = str.call<jni::Array<jni::byte_t>>("getBytes");
+        ASSERT(bytes.getLength() == 7);
+    }
 }
 
 TEST(Object_makeLocalReference)

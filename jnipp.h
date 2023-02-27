@@ -73,6 +73,7 @@ namespace jni
 
     // Foward Declarations
     class Object;
+    template <class TElement> class Array;
 
     /**
         This namespace is for messy implementation details only. It is not a part
@@ -102,6 +103,9 @@ namespace jni
         inline std::string valueSig(const wchar_t* const*) { return "Ljava/lang/String;"; }
         std::string valueSig(const Object* obj);
         inline std::string valueSig(const Object* const* obj) { return valueSig(obj ? *obj : nullptr); }
+
+        template <class TArg>
+        inline std::string valueSig(const Array<TArg>*) { return "[" + valueSig((TArg*) nullptr); }
 
         template <int n, class TArg>
         inline std::string valueSig(const TArg(*arg)[n]) { return valueSig((const TArg* const*)arg); }
@@ -222,10 +226,6 @@ namespace jni
         Get the appropriate JNI environment for this thread.
      */
     JNIEnv* env();
-
-    // Forward declaration
-    template <class TElement>
-    class Array;
 
     /**
         Object corresponds with a `java.lang.Object` instance. With an Object,
