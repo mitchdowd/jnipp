@@ -3,8 +3,15 @@
 
 // Standard Dependencies
 #include <cstring>
-#include <stdexcept>        // For std::runtime_error
 #include <string>
+
+#ifndef JNIPP_USE_EXCEPTION
+#error "JNIPP_USE_EXCEPTION not defined"
+#endif
+
+#if JNIPP_USE_EXCEPTION
+#include <stdexcept>        // For std::runtime_error
+#endif
 
 // Forward Declarations
 struct JNIEnv_;
@@ -55,6 +62,7 @@ namespace jni
      */
     typedef unsigned char byte_t;
 
+#if JNIPP_USE_EXCEPTION
 #ifdef JNIPP_EXCEPTION_CLASS
 
     /**
@@ -70,6 +78,7 @@ namespace jni
     typedef std::runtime_error Exception;
 
 #endif // JNIPP_EXCEPTION_CLASS
+#endif  // JNIPP_USE_EXCEPTION
 
     // Foward Declarations
     class Object;
@@ -986,6 +995,7 @@ namespace jni
         ~Vm();
     };
 
+#if JNIPP_USE_EXCEPTION
     /**
         A Java method call threw an Exception.
      */
@@ -1024,6 +1034,7 @@ namespace jni
          */
         InitializationException(const char* msg) : Exception(msg) {}
     };
+#endif
 
     /*
         Array Implementation

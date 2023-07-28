@@ -11,7 +11,7 @@
     jni::Vm Tests
  */
 
-
+#if JNIPP_USE_EXCEPTION == 1
 TEST(Vm_detectsJreInstall)
 {
     try
@@ -42,6 +42,7 @@ TEST(Vm_notAllowedMultipleVms)
 
     ASSERT(0);
 }
+#endif
 
 /*
     jni::Class Tests
@@ -55,6 +56,7 @@ TEST(Class_findByName_success)
     ASSERT(!cls.isNull());
 }
 
+#if JNIPP_USE_EXCEPTION
 TEST(Class_findByName_failure)
 {
     try
@@ -69,6 +71,7 @@ TEST(Class_findByName_failure)
 
     ASSERT(0);
 }
+#endif
 
 TEST(Class_getName)
 {
@@ -430,6 +433,7 @@ TEST(Array_getElement_defaultValue)
     ASSERT(s.getElement(0).length() == 0);
 }
 
+#if JNIPP_USE_EXCEPTION
 TEST(Array_getElement_indexException)
 {
     jni::Array<int> a(10);
@@ -444,6 +448,7 @@ TEST(Array_getElement_indexException)
         ASSERT(1);
     }
 }
+#endif
 
 TEST(Array_setElement_basicType)
 {
@@ -467,6 +472,7 @@ TEST(Array_setElement_string)
         ASSERT(a.getElement(i) == std::to_wstring(i));
 }
 
+#if JNIPP_USE_EXCEPTION
 TEST(Array_setElement_indexException)
 {
     jni::Array<std::string> s(10);
@@ -481,6 +487,7 @@ TEST(Array_setElement_indexException)
         ASSERT(1);
     }
 }
+#endif
 
 /*
     Argument Type Tests
@@ -560,15 +567,20 @@ TEST(Arg_ObjectPtr)
 int main()
 {
     // jni::Vm Tests
+
+#if JNIPP_USE_EXCEPTION
     RUN_TEST(Vm_detectsJreInstall);
     RUN_TEST(Vm_notAllowedMultipleVms);
+#endif
 
     {
         jni::Vm vm;
 
         // jni::Class Tests
         RUN_TEST(Class_findByName_success);
+#if JNIPP_USE_EXCEPTION
         RUN_TEST(Class_findByName_failure);
+#endif
         RUN_TEST(Class_getName);
         RUN_TEST(Class_getParent);
         RUN_TEST(Class_newInstance);
@@ -606,10 +618,14 @@ int main()
         RUN_TEST(Array_copyConstructor);
         RUN_TEST(Array_moveConstructor);
         RUN_TEST(Array_getElement_defaultValue);
+#if JNIPP_USE_EXCEPTION
         RUN_TEST(Array_getElement_indexException);
+#endif
         RUN_TEST(Array_setElement_basicType);
         RUN_TEST(Array_setElement_string);
+#if JNIPP_USE_EXCEPTION
         RUN_TEST(Array_setElement_indexException);
+#endif
 
         // Argument Type Tests
         RUN_TEST(Arg_bool);
