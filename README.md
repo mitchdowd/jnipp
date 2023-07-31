@@ -102,6 +102,10 @@ extern "C" void Java_com_example_Demo_run(jni::JNIEnv* env, jni::jobject obj)
 
 ## Configuration
 
-By default, *jnipp* uses std::runtime_error as the base exception class. If you wish,
+By default, *jnipp* uses `std::runtime_error` as the base exception class. If you wish,
 you can define `JNIPP_EXCEPTION_CLASS` to be the exception class you wish to use, before
 including `jnipp.h`. It just needs a `const char*` constructor.
+
+### Disabling exceptions
+
+*jnipp* supports a no-exception mode, in which all `throw` expressions will be replaced with calls to `std::terminate()`. It can be enabled by compiling the library with `JNIPP_USE_EXCEPTION` defined to value `0`. This is also controlled by the CMake option called `JNIPP_USE_EXCEPTION_HANDLING`, which is `ON` by default (i.e. exceptions will by default be *enabled*).

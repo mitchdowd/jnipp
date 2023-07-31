@@ -5,8 +5,11 @@
 #include <cstring>
 #include <string>
 
+// JNIPP by default uses exceptions to communicate errors to the consumers.
+// The preprocessor directive should be set by the build script, but in case
+// it wasn't, define it here to its expected default value.
 #ifndef JNIPP_USE_EXCEPTION
-#error "JNIPP_USE_EXCEPTION not defined"
+#define JNIPP_USE_EXCEPTION 1
 #endif
 
 #if JNIPP_USE_EXCEPTION
