@@ -21,9 +21,9 @@
 #include "jnipp.h"
 
 #if JNIPP_USE_EXCEPTION
+#include <exception>
 #define JNIPP_THROW(...) do { throw __VA_ARGS__; } while(0)
 #else
-#include <exception>
 #define JNIPP_THROW(...) do { std::terminate(); } while(0)
 #endif
 
