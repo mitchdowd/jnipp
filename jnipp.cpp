@@ -20,6 +20,13 @@
 // Local Dependencies
 #include "jnipp.h"
 
+#if JNIPP_USE_EXCEPTION
+#include <exception>
+#define JNIPP_THROW(...) do { throw __VA_ARGS__; } while(0)
+#else
+#define JNIPP_THROW(...) do { std::terminate(); } while(0)
+#endif
+
 namespace jni
 {
     // Static Variables
@@ -65,7 +72,7 @@ namespace jni
             return;
 
         if (vm == nullptr)
-            throw InitializationException("JNI not initialized");
+            JNIPP_THROW(InitializationException("JNI not initialized"));
 
         if (!getEnv(vm, &_env))
         {
@@ -74,7 +81,7 @@ namespace jni
 #else
             if (vm->AttachCurrentThread((void**)&_env, nullptr) != 0)
 #endif
-                throw InitializationException("Could not attach JNI to thread");
+                JNIPP_THROW(InitializationException("Could not attach JNI to thread"));
 
             _attached = true;
         }
@@ -182,7 +189,7 @@ namespace jni
         if (ref == nullptr)
         {
             env()->ExceptionClear();
-            throw NameResolutionException(name);
+            JNIPP_THROW(NameResolutionException(name));
         }
 
         return ref;
@@ -200,7 +207,7 @@ namespace jni
 
             env->ExceptionClear();
             std::string msg = obj.call<std::string>("toString");
-            throw InvocationException(msg.c_str());
+            JNIPP_THROW(InvocationException(msg.c_str()));
         }
     }
 
@@ -258,7 +265,7 @@ namespace jni
         if (isVm.compare_exchange_strong(expected, true))
         {
             if (javaVm == nullptr && env->GetJavaVM(&javaVm) != 0)
-                throw InitializationException("Could not acquire Java VM");
+                JNIPP_THROW(InitializationException("Could not acquire Java VM"));
         }
     }
 
@@ -675,7 +682,7 @@ namespace jni
         jfieldID id = env()->GetFieldID(getHandle(), name, signature);
 
         if (id == nullptr)
-            throw NameResolutionException(name);
+            JNIPP_THROW(NameResolutionException(name));
 
         return id;
     }
@@ -685,7 +692,7 @@ namespace jni
         jfieldID id = env()->GetStaticFieldID(getHandle(), name, signature);
 
         if (id == nullptr)
-            throw NameResolutionException(name);
+            JNIPP_THROW(NameResolutionException(name));
 
         return id;
     }
@@ -695,7 +702,7 @@ namespace jni
         jmethodID id = env()->GetMethodID(getHandle(), name, signature);
 
         if (id == nullptr)
-            throw NameResolutionException(name);
+            JNIPP_THROW(NameResolutionException(name));
 
         return id;
     }
@@ -710,7 +717,7 @@ namespace jni
             return getMethod(std::string(nameAndSignature, sig - nameAndSignature).c_str(), sig);
 
         if (id == nullptr)
-            throw NameResolutionException(nameAndSignature);
+            JNIPP_THROW(NameResolutionException(nameAndSignature));
 
         return id;
     }
@@ -720,7 +727,7 @@ namespace jni
         jmethodID id = env()->GetStaticMethodID(getHandle(), name, signature);
 
         if (id == nullptr)
-            throw NameResolutionException(name);
+            JNIPP_THROW(NameResolutionException(name));
 
         return id;
     }
@@ -734,7 +741,7 @@ namespace jni
             return getStaticMethod(std::string(nameAndSignature, sig - nameAndSignature).c_str(), sig);
 
         if (id == nullptr)
-            throw NameResolutionException(nameAndSignature);
+            JNIPP_THROW(NameResolutionException(nameAndSignature));
 
         return id;
     }
@@ -1452,9 +1459,9 @@ namespace jni
         std::string path = path_ ? path_ : detectJvmPath();
 
         if (path.length() == 0)
-            throw InitializationException("Could not locate Java Virtual Machine");
+            JNIPP_THROW(InitializationException("Could not locate Java Virtual Machine"));
         if (!isVm.compare_exchange_strong(expected, true))
-            throw InitializationException("Java Virtual Machine already initialized");
+            JNIPP_THROW(InitializationException("Java Virtual Machine already initialized"));
 
         if (javaVm == nullptr)
         {
@@ -1492,7 +1499,7 @@ namespace jni
             if (lib == NULL)
             {
                 isVm.store(false);
-                throw InitializationException("Could not load JVM library");
+                JNIPP_THROW(InitializationException("Could not load JVM library"));
             }
 
             CreateVm_t JNI_CreateJavaVM = (CreateVm_t) ::dlsym(lib, "JNI_CreateJavaVM");
@@ -1501,7 +1508,7 @@ namespace jni
             {
                 isVm.store(false);
                 ::dlclose(lib);
-                throw InitializationException("Java Virtual Machine failed during creation");
+                JNIPP_THROW(InitializationException("Java Virtual Machine failed during creation"));
             }
 
 #endif // _WIN32

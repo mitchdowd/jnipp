@@ -6,6 +6,12 @@ add_executable(main_test main.cpp testing.h)
 target_link_libraries(main_test PRIVATE jnipp)
 add_test(NAME main_test COMMAND main_test)
 
+if(NOT JNIPP_USE_EXCEPTION_HANDLING)
+  if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(main_test PRIVATE -fno-exceptions)
+  endif()
+endif()
+
 add_executable(external_create external_create.cpp testing.h)
 target_link_libraries(external_create PUBLIC jnipp ${JNI_LIBRARIES})
 target_include_directories(external_create PUBLIC ${JNI_INCLUDE_DIRS})
