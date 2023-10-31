@@ -204,7 +204,7 @@ namespace jni
         }
     }
 
-    static std::string toString(jobject handle, bool deleteLocal = true)
+    static std::string toString(jobject handle, bool deleteLocal = true) noexcept
     {
         std::string result;
 
@@ -1660,7 +1660,7 @@ namespace jni
         staticMessage = msg;
     }
 
-    void ExceptionData::setFromJni(ExceptionCategory cat,
+    void ExceptionData::setFromJni(ExceptionCategory cat, JNIEnv *env,
                                    jobject exception) noexcept
     {
         reset();
@@ -1668,8 +1668,20 @@ namespace jni
         exceptionThrown = true;
         category = cat;
 
-        JNIEnv *env = jni::env();
         exceptionObject = env->NewLocalRef(exception);
+    }
+
+    void ExceptionData::setFromJniEnv(ExceptionCategory cat,
+                                      JNIEnv *env) noexcept
+    {
+        reset();
+        jthrowable exception = env->ExceptionOccurred();
+
+        if (exception != nullptr) {
+            setFromJni(cat, env, exception);
+
+            env->ExceptionClear();
+        }
     }
 
     void ExceptionData::reset() noexcept
@@ -1690,6 +1702,28 @@ namespace jni
         swap(category, other.category);
         swap(staticMessage, other.staticMessage);
         swap(exceptionObject, other.exceptionObject);
+    }
+
+    std::string ExceptionData::getMessage() const
+    {
+        if (!exceptionThrown) {
+            return {};
+        }
+        if (staticMessage) {
+            return staticMessage;
+        }
+        if (!exceptionObject) {
+            return "Exception thrown but no message specified";
+        }
+        JNIEnv *env = jni::env();
+        jclass cls = env->GetObjectClass(exceptionObject);
+        method_t toStringMethod =
+            env->GetMethodID(cls, "toString", "()Ljava/lang/String;");
+        jobject resultStr =
+            env->CallObjectMethod(exceptionObject, toStringMethod);
+        // ignore any exceptions in this process
+        env->ExceptionClear();
+        return toString(resultStr, true);
     }
 }
 

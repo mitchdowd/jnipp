@@ -100,13 +100,28 @@ namespace jni
 
         explicit operator bool() const noexcept { return exceptionThrown; }
 
+        /// Assign from a category and string with static lifetime
         void setFromStaticMessage(ExceptionCategory cat,
                                   const char *msg) noexcept;
-        void setFromJni(ExceptionCategory cat,
+
+        /// Assign from a category and JNI exception
+        void setFromJni(ExceptionCategory cat, JNIEnv *env,
                         jobject exception) noexcept;
+
+        /// If an exception is set in the JNIEnv, get it, and clear it from the env.
+        void setFromJniEnv(ExceptionCategory cat, JNIEnv* env) noexcept;
+
+        /// Reset the contents
         void reset() noexcept;
 
-        void swap(ExceptionData& other) noexcept;
+        /// Swap with another instance of ExceptionData
+        void swap(ExceptionData &other) noexcept;
+
+        /// Throw an Exception subclass based on this data
+        void throwException();
+
+        /// Get a string from the exception, if any.
+        std::string getMessage() const;
         private:
         bool exceptionThrown = false;
         ExceptionCategory category{};
