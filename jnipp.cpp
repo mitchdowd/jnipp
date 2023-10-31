@@ -43,7 +43,8 @@ namespace jni
         ScopedEnv() noexcept : _vm(nullptr), _env(nullptr), _attached(false) {}
         ~ScopedEnv();
 
-        void init(JavaVM* vm);
+        void init(JavaVM *vm, ExceptionData &exc) noexcept;
+        void init(JavaVM *vm);
         JNIEnv* get() const noexcept { return _env; }
 
     private:
@@ -59,22 +60,31 @@ namespace jni
             _vm->DetachCurrentThread();
     }
 
-    void ScopedEnv::init(JavaVM* vm)
-    {
+    void ScopedEnv::init(JavaVM *vm, ExceptionData &exc) noexcept {
         if (_env != nullptr)
             return;
 
-        if (vm == nullptr)
-            throw InitializationException("JNI not initialized");
+        if (vm == nullptr) {
+            exc.setFromStaticMessage(ExceptionCategory::Initialization,
+                                     "JNI not initialized");
+            return;
+        }
 
         if (!getEnv(vm, &_env))
         {
+            jint attachResult = 0;
 #ifdef __ANDROID__
-            if (vm->AttachCurrentThread(&_env, nullptr) != 0)
+            attachResult = vm->AttachCurrentThread(&_env, nullptr);
 #else
-            if (vm->AttachCurrentThread((void**)&_env, nullptr) != 0)
+            attachResult = vm->AttachCurrentThread((void **)&_env, nullptr);
 #endif
-                throw InitializationException("Could not attach JNI to thread");
+            if (attachResult != 0)
+            {
+
+              exc.setFromStaticMessage(ExceptionCategory::Initialization,
+                                       "Could not attach JNI to thread");
+              return;
+            }
 
             _attached = true;
         }
@@ -175,14 +185,14 @@ namespace jni
         return env.get();
     }
 
-    static jclass findClass(const char* name)
+    static jclass findClass(const char* name, ExceptionData &exc)
     {
         jclass ref = env()->FindClass(name);
 
         if (ref == nullptr)
         {
             env()->ExceptionClear();
-            throw NameResolutionException(name);
+            exc.setFromStaticMessage(ExceptionCategory::NameResolution, name);
         }
 
         return ref;
@@ -262,7 +272,17 @@ namespace jni
         }
     }
 
-    void init(JavaVM* vm) {
+    void init(JNIEnv *env, ExceptionData &exc) noexcept {
+
+        bool expected = false;
+
+        if (isVm.compare_exchange_strong(expected, true)) {
+            if (javaVm == nullptr && env->GetJavaVM(&javaVm) != 0)
+                exc.setFromStaticMessage(ExceptionCategory::Initialization, "Could not acquire Java VM");
+        }
+    }
+
+    void init(JavaVM *vm) noexcept {
         bool expected = false;
 
         if (isVm.compare_exchange_strong(expected, true))

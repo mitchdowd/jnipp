@@ -267,19 +267,29 @@ namespace jni
     }
 
     /**
-        Initialises the Java Native Interface with the given JNIEnv handle, which
-        gets passed into a native function which is called from Java. This only
+        Initialises the Java Native Interface with the given JNIEnv handle,
+        which gets passed into a native function which is called from Java. This only
         needs to be done once per process - further calls are no-ops.
         \param env A JNI environment handle.
      */
     void init(JNIEnv* env);
+    /**
+        Initialises the Java Native Interface with the given JNIEnv handle,
+        which gets passed into a native function which is called from Java. This only
+        needs to be done once per process - further calls are no-ops.
+
+        This overload does not throw exceptions.
+        \param env A JNI environment handle.
+        \param exc Exception data to populate
+     */
+    void init(JNIEnv *env, ExceptionData &exc) noexcept;
     /**
         Initialises the Java Native Interface with the given JavaVM handle,
         which may be accessible. This (or the other overload) only needs to be
         done once per process - further calls are no-ops.
         \param vm A JNI VM handle.
      */
-    void init(JavaVM* vm);
+    void init(JavaVM *vm) noexcept;
 
     /**
         Get the appropriate JNI environment for this thread.
