@@ -1629,5 +1629,67 @@ namespace jni
             return env()->GetArrayLength(array);
         }
     }
+
+    ExceptionData::~ExceptionData() noexcept
+    {
+        reset();
+    }
+
+    ExceptionData::ExceptionData(ExceptionData &&other) noexcept
+        : ExceptionData()
+    {
+        swap(other);
+    }
+
+    ExceptionData &ExceptionData::operator=(ExceptionData &&other) noexcept
+    {
+        if (&other == this) {
+            return *this;
+        }
+        reset();
+        swap(other);
+        return *this;
+    }
+
+    void ExceptionData::setFromStaticMessage(ExceptionCategory cat,
+                                             const char *msg) noexcept
+    {
+        reset();
+        exceptionThrown = true;
+        category = cat;
+        staticMessage = msg;
+    }
+
+    void ExceptionData::setFromJni(ExceptionCategory cat,
+                                   jobject exception) noexcept
+    {
+        reset();
+
+        exceptionThrown = true;
+        category = cat;
+
+        JNIEnv *env = jni::env();
+        exceptionObject = env->NewLocalRef(exception);
+    }
+
+    void ExceptionData::reset() noexcept
+    {
+        exceptionThrown = false;
+        staticMessage = nullptr;
+        if (exceptionObject != nullptr) {
+            JNIEnv *env = jni::env();
+            env->DeleteLocalRef(exceptionObject);
+            exceptionObject = nullptr;
+        }
+    }
+
+    void ExceptionData::swap(ExceptionData &other) noexcept
+    {
+        using std::swap;
+        swap(exceptionThrown, other.exceptionThrown);
+        swap(category, other.category);
+        swap(staticMessage, other.staticMessage);
+        swap(exceptionObject, other.exceptionObject);
+    }
 }
 

@@ -75,6 +75,46 @@ namespace jni
     class Object;
     template <class TElement> class Array;
 
+    enum class ExceptionCategory {
+      //! Could not locate Java VM
+      InitializationCouldNotLocate,
+      //! JVM already initialized
+      InitializationAlreadyInit,
+      //! A supplied name or signature could not be found
+      NameResolution,
+      Invocation,
+    };
+
+    /// Class for exception data, used for noexcept overloads
+    class ExceptionData {
+        public:
+        ExceptionData() noexcept = default;
+        ~ExceptionData() noexcept;
+        /// move constructor
+        ExceptionData(ExceptionData &&other) noexcept;
+        /// move assignment
+        ExceptionData &operator=(ExceptionData &&other) noexcept;
+        // no copy
+        ExceptionData(const ExceptionData &) = delete;
+        ExceptionData& operator=(const ExceptionData &) = delete;
+
+        explicit operator bool() const noexcept { return exceptionThrown; }
+
+        void setFromStaticMessage(ExceptionCategory cat,
+                                  const char *msg) noexcept;
+        void setFromJni(ExceptionCategory cat,
+                        jobject exception) noexcept;
+        void reset() noexcept;
+
+        void swap(ExceptionData& other) noexcept;
+        private:
+        bool exceptionThrown = false;
+        ExceptionCategory category{};
+        const char *staticMessage = nullptr;
+        jobject exceptionObject = nullptr;
+
+    };
+
     /**
         This namespace is for messy implementation details only. It is not a part
         of the external API and is subject to change at any time. It is only in a
