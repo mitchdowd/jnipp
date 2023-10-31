@@ -641,7 +641,7 @@ namespace jni
         return Class(getClass(), Temporary).getField(name, signature);
     }
 
-    jobject Object::makeLocalReference() const 
+    jobject Object::makeLocalReference() const
     {
         if (isNull())
             return nullptr;
@@ -1660,6 +1660,15 @@ namespace jni
         staticMessage = msg;
     }
 
+    void ExceptionData::setFromDynamicMessage(ExceptionCategory cat,
+                                              std::string &&msg) noexcept
+    {
+        reset();
+        exceptionThrown = true;
+        category = cat;
+        dynamicMessage = std::move(msg);
+    }
+
     void ExceptionData::setFromJni(ExceptionCategory cat, JNIEnv *env,
                                    jobject exception) noexcept
     {
@@ -1688,6 +1697,7 @@ namespace jni
     {
         exceptionThrown = false;
         staticMessage = nullptr;
+        dynamicMessage.clear();
         if (exceptionObject != nullptr) {
             JNIEnv *env = jni::env();
             env->DeleteLocalRef(exceptionObject);
@@ -1704,6 +1714,30 @@ namespace jni
         swap(exceptionObject, other.exceptionObject);
     }
 
+    void ExceptionData::throwException()
+    {
+        if (!exceptionThrown) {
+            return;
+        }
+        if (staticMessage) {
+            switch (category) {
+                case ExceptionCategory::Initialization: throw InitializationException(staticMessage);
+                case ExceptionCategory::NameResolution: throw NameResolutionException(staticMessage);
+                case ExceptionCategory::Invocation: throw InvocationException(staticMessage);
+            }
+        }
+        std::string msg = getExceptionObjectMessage();
+
+        switch (category) {
+        case ExceptionCategory::Initialization:
+            throw InitializationException(msg.c_str());
+        case ExceptionCategory::NameResolution:
+            throw NameResolutionException(msg.c_str());
+        case ExceptionCategory::Invocation:
+            throw InvocationException(msg.c_str());
+        }
+    }
+
     std::string ExceptionData::getMessage() const
     {
         if (!exceptionThrown) {
@@ -1711,6 +1745,15 @@ namespace jni
         }
         if (staticMessage) {
             return staticMessage;
+        }
+        return getExceptionObjectMessage();
+    }
+
+    std::string ExceptionData::getExceptionObjectMessage() const
+    {
+
+        if (!exceptionThrown) {
+            return {};
         }
         if (!exceptionObject) {
             return "Exception thrown but no message specified";

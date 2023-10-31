@@ -76,10 +76,7 @@ namespace jni
     template <class TElement> class Array;
 
     enum class ExceptionCategory {
-      //! Could not locate Java VM
-      InitializationCouldNotLocate,
-      //! JVM already initialized
-      InitializationAlreadyInit,
+      Initialization,
       //! A supplied name or signature could not be found
       NameResolution,
       Invocation,
@@ -87,7 +84,7 @@ namespace jni
 
     /// Class for exception data, used for noexcept overloads
     class ExceptionData {
-        public:
+      public:
         ExceptionData() noexcept = default;
         ~ExceptionData() noexcept;
         /// move constructor
@@ -104,6 +101,9 @@ namespace jni
         void setFromStaticMessage(ExceptionCategory cat,
                                   const char *msg) noexcept;
 
+        void setFromDynamicMessage(ExceptionCategory cat,
+                                  std::string&& msg) noexcept;
+
         /// Assign from a category and JNI exception
         void setFromJni(ExceptionCategory cat, JNIEnv *env,
                         jobject exception) noexcept;
@@ -117,15 +117,19 @@ namespace jni
         /// Swap with another instance of ExceptionData
         void swap(ExceptionData &other) noexcept;
 
-        /// Throw an Exception subclass based on this data
+        /// Throw an Exception subclass based on this data, if set as thrown.
         void throwException();
 
         /// Get a string from the exception, if any.
         std::string getMessage() const;
-        private:
+
+      private:
+        std::string getExceptionObjectMessage() const;
         bool exceptionThrown = false;
         ExceptionCategory category{};
         const char *staticMessage = nullptr;
+        std::string dynamicMessage{};
+        /// local reference
         jobject exceptionObject = nullptr;
 
     };
