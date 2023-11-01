@@ -43,7 +43,8 @@ namespace jni
         ScopedEnv() noexcept : _vm(nullptr), _env(nullptr), _attached(false) {}
         ~ScopedEnv();
 
-        void init(JavaVM* vm);
+        void init(JavaVM *vm, ExceptionData &exc) noexcept;
+        void init(JavaVM *vm);
         JNIEnv* get() const noexcept { return _env; }
 
     private:
@@ -59,28 +60,45 @@ namespace jni
             _vm->DetachCurrentThread();
     }
 
-    void ScopedEnv::init(JavaVM* vm)
-    {
+    void ScopedEnv::init(JavaVM *vm, ExceptionData &exc) noexcept {
         if (_env != nullptr)
             return;
 
-        if (vm == nullptr)
-            throw InitializationException("JNI not initialized");
+        if (vm == nullptr) {
+            exc.setFromStaticMessage(ExceptionCategory::Initialization,
+                                     "JNI not initialized");
+            return;
+        }
 
         if (!getEnv(vm, &_env))
         {
+            jint attachResult = 0;
 #ifdef __ANDROID__
-            if (vm->AttachCurrentThread(&_env, nullptr) != 0)
+            attachResult = vm->AttachCurrentThread(&_env, nullptr);
 #else
-            if (vm->AttachCurrentThread((void**)&_env, nullptr) != 0)
+            attachResult = vm->AttachCurrentThread((void **)&_env, nullptr);
 #endif
-                throw InitializationException("Could not attach JNI to thread");
+            if (attachResult != 0)
+            {
+
+              exc.setFromStaticMessage(ExceptionCategory::Initialization,
+                                       "Could not attach JNI to thread");
+              return;
+            }
 
             _attached = true;
         }
 
         _vm = vm;
     }
+
+#ifndef JNIPP_DISABLE_EXCEPTIONS
+    void ScopedEnv::init(JavaVM *vm) {
+        ExceptionData exc;
+        this->init(vm, exc);
+        exc.throwException();
+    }
+#endif // !JNIPP_DISABLE_EXCEPTIONS
 
     /*
         Helper Functions
@@ -156,7 +174,7 @@ namespace jni
 
 #endif // _WIN32
 
-    JNIEnv* env()
+    JNIEnv* env(ExceptionData &exc) noexcept
     {
         static thread_local ScopedEnv env;
 
@@ -169,24 +187,44 @@ namespace jni
 
         if (env.get() == nullptr)
         {
-            env.init(javaVm);
+            env.init(javaVm, exc);
         }
 
         return env.get();
     }
 
-    static jclass findClass(const char* name)
+#ifndef JNIPP_DISABLE_EXCEPTIONS
+    JNIEnv* env()
+    {
+        ExceptionData exc;
+        JNIEnv *ret = env(exc);
+        exc.throwException();
+        return ret;
+    }
+#endif // !JNIPP_DISABLE_EXCEPTIONS
+
+    static jclass findClass(const char* name, ExceptionData &exc) noexcept
     {
         jclass ref = env()->FindClass(name);
 
         if (ref == nullptr)
         {
             env()->ExceptionClear();
-            throw NameResolutionException(name);
+            exc.setFromStaticMessage(ExceptionCategory::NameResolution, name);
         }
 
         return ref;
     }
+
+#ifndef JNIPP_DISABLE_EXCEPTIONS
+    static jclass findClass(const char *name)
+    {
+        ExceptionData exc;
+        jclass ref = findClass(name, exc);
+        exc.throwException();
+        return ref;
+    }
+#endif // !JNIPP_DISABLE_EXCEPTIONS
 
     static void handleJavaExceptions()
     {
@@ -204,7 +242,7 @@ namespace jni
         }
     }
 
-    static std::string toString(jobject handle, bool deleteLocal = true)
+    static std::string toString(jobject handle, bool deleteLocal = true) noexcept
     {
         std::string result;
 
@@ -262,7 +300,17 @@ namespace jni
         }
     }
 
-    void init(JavaVM* vm) {
+    void init(JNIEnv *env, ExceptionData &exc) noexcept {
+
+        bool expected = false;
+
+        if (isVm.compare_exchange_strong(expected, true)) {
+            if (javaVm == nullptr && env->GetJavaVM(&javaVm) != 0)
+                exc.setFromStaticMessage(ExceptionCategory::Initialization, "Could not acquire Java VM");
+        }
+    }
+
+    void init(JavaVM *vm) noexcept {
         bool expected = false;
 
         if (isVm.compare_exchange_strong(expected, true))
@@ -641,7 +689,7 @@ namespace jni
         return Class(getClass(), Temporary).getField(name, signature);
     }
 
-    jobject Object::makeLocalReference() const 
+    jobject Object::makeLocalReference() const
     {
         if (isNull())
             return nullptr;
@@ -655,6 +703,9 @@ namespace jni
     Class::Class(const char* name) : Object(findClass(name), DeleteLocalInput)
     {
     }
+
+    Class::Class(const char *name, ExceptionData &exc) noexcept
+        : Object(findClass(name, exc), DeleteLocalInput) {}
 
     Class::Class(jclass ref, int scopeFlags) : Object(ref, scopeFlags)
     {
@@ -1628,6 +1679,145 @@ namespace jni
         {
             return env()->GetArrayLength(array);
         }
+    }
+
+    ExceptionData::~ExceptionData() noexcept
+    {
+        reset();
+    }
+
+    ExceptionData::ExceptionData(ExceptionData &&other) noexcept
+        : ExceptionData()
+    {
+        swap(other);
+    }
+
+    ExceptionData &ExceptionData::operator=(ExceptionData &&other) noexcept
+    {
+        if (&other == this) {
+            return *this;
+        }
+        reset();
+        swap(other);
+        return *this;
+    }
+
+    void ExceptionData::setFromStaticMessage(ExceptionCategory cat,
+                                             const char *msg) noexcept
+    {
+        reset();
+        exceptionThrown = true;
+        category = cat;
+        staticMessage = msg;
+    }
+
+    void ExceptionData::setFromDynamicMessage(ExceptionCategory cat,
+                                              std::string &&msg) noexcept
+    {
+        reset();
+        exceptionThrown = true;
+        category = cat;
+        dynamicMessage = std::move(msg);
+    }
+
+    void ExceptionData::setFromJni(ExceptionCategory cat, JNIEnv *env,
+                                   jobject exception) noexcept
+    {
+        reset();
+
+        exceptionThrown = true;
+        category = cat;
+
+        exceptionObject = env->NewLocalRef(exception);
+    }
+
+    void ExceptionData::setFromJniEnv(ExceptionCategory cat,
+                                      JNIEnv *env) noexcept
+    {
+        reset();
+        jthrowable exception = env->ExceptionOccurred();
+
+        if (exception != nullptr) {
+            setFromJni(cat, env, exception);
+
+            env->ExceptionClear();
+        }
+    }
+
+    void ExceptionData::reset() noexcept
+    {
+        exceptionThrown = false;
+        staticMessage = nullptr;
+        dynamicMessage.clear();
+        if (exceptionObject != nullptr) {
+            JNIEnv *env = jni::env();
+            env->DeleteLocalRef(exceptionObject);
+            exceptionObject = nullptr;
+        }
+    }
+
+    void ExceptionData::swap(ExceptionData &other) noexcept
+    {
+        using std::swap;
+        swap(exceptionThrown, other.exceptionThrown);
+        swap(category, other.category);
+        swap(staticMessage, other.staticMessage);
+        swap(exceptionObject, other.exceptionObject);
+    }
+
+    void ExceptionData::throwException()
+    {
+        if (!exceptionThrown) {
+            return;
+        }
+        if (staticMessage) {
+            switch (category) {
+                case ExceptionCategory::Initialization: throw InitializationException(staticMessage);
+                case ExceptionCategory::NameResolution: throw NameResolutionException(staticMessage);
+                case ExceptionCategory::Invocation: throw InvocationException(staticMessage);
+            }
+        }
+        std::string msg = getExceptionObjectMessage();
+
+        switch (category) {
+        case ExceptionCategory::Initialization:
+            throw InitializationException(msg.c_str());
+        case ExceptionCategory::NameResolution:
+            throw NameResolutionException(msg.c_str());
+        case ExceptionCategory::Invocation:
+            throw InvocationException(msg.c_str());
+        }
+    }
+
+    std::string ExceptionData::getMessage() const
+    {
+        if (!exceptionThrown) {
+            return {};
+        }
+        if (staticMessage) {
+            return staticMessage;
+        }
+        return getExceptionObjectMessage();
+    }
+
+    std::string ExceptionData::getExceptionObjectMessage() const
+    {
+
+        if (!exceptionThrown) {
+            return {};
+        }
+        if (!exceptionObject) {
+            return "Exception thrown but no message specified";
+        }
+        JNIEnv *env = jni::env();
+        jclass cls = env->GetObjectClass(exceptionObject);
+        method_t toStringMethod =
+            env->GetMethodID(cls, "toString", "()Ljava/lang/String;");
+        jobject resultStr =
+            env->CallObjectMethod(exceptionObject, toStringMethod);
+        // ignore any exceptions in this process
+        env->ExceptionClear();
+        return toString(resultStr, true);
     }
 }
 

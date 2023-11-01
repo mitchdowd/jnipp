@@ -55,6 +55,7 @@ namespace jni
      */
     typedef unsigned char byte_t;
 
+#ifndef JNIPP_DISABLE_EXCEPTIONS
 #ifdef JNIPP_EXCEPTION_CLASS
 
     /**
@@ -70,10 +71,72 @@ namespace jni
     typedef std::runtime_error Exception;
 
 #endif // JNIPP_EXCEPTION_CLASS
+#endif // !JNIPP_DISABLE_EXCEPTIONS
 
     // Foward Declarations
     class Object;
     template <class TElement> class Array;
+
+    enum class ExceptionCategory {
+      Initialization,
+      //! A supplied name or signature could not be found
+      NameResolution,
+      Invocation,
+    };
+
+    /// Class for exception data, used for noexcept overloads
+    class ExceptionData {
+      public:
+        ExceptionData() noexcept = default;
+        ~ExceptionData() noexcept;
+        /// move constructor
+        ExceptionData(ExceptionData &&other) noexcept;
+        /// move assignment
+        ExceptionData &operator=(ExceptionData &&other) noexcept;
+        // no copy
+        ExceptionData(const ExceptionData &) = delete;
+        ExceptionData& operator=(const ExceptionData &) = delete;
+
+        explicit operator bool() const noexcept { return exceptionThrown; }
+
+        /// Assign from a category and string with static lifetime
+        void setFromStaticMessage(ExceptionCategory cat,
+                                  const char *msg) noexcept;
+
+        void setFromDynamicMessage(ExceptionCategory cat,
+                                  std::string&& msg) noexcept;
+
+        /// Assign from a category and JNI exception
+        void setFromJni(ExceptionCategory cat, JNIEnv *env,
+                        jobject exception) noexcept;
+
+        /// If an exception is set in the JNIEnv, get it, and clear it from the env.
+        void setFromJniEnv(ExceptionCategory cat, JNIEnv* env) noexcept;
+
+        /// Reset the contents
+        void reset() noexcept;
+
+        /// Swap with another instance of ExceptionData
+        void swap(ExceptionData &other) noexcept;
+
+#ifndef JNIPP_DISABLE_EXCEPTIONS
+        /// Throw an Exception subclass based on this data, if set as thrown.
+        void throwException();
+#endif // !JNIPP_DISABLE_EXCEPTIONS
+
+        /// Get a string from the exception, if any.
+        std::string getMessage() const;
+
+      private:
+        std::string getExceptionObjectMessage() const;
+        bool exceptionThrown = false;
+        ExceptionCategory category{};
+        const char *staticMessage = nullptr;
+        std::string dynamicMessage{};
+        /// local reference
+        jobject exceptionObject = nullptr;
+
+    };
 
     /**
         This namespace is for messy implementation details only. It is not a part
@@ -207,25 +270,45 @@ namespace jni
         };
     }
 
+#ifndef JNIPP_DISABLE_EXCEPTIONS
     /**
-        Initialises the Java Native Interface with the given JNIEnv handle, which
-        gets passed into a native function which is called from Java. This only
+        Initialises the Java Native Interface with the given JNIEnv handle,
+        which gets passed into a native function which is called from Java. This only
         needs to be done once per process - further calls are no-ops.
         \param env A JNI environment handle.
      */
-    void init(JNIEnv* env);
+    void init(JNIEnv *env);
+#endif // !JNIPP_DISABLE_EXCEPTIONS
+
+    /**
+        Initialises the Java Native Interface with the given JNIEnv handle,
+        which gets passed into a native function which is called from Java. This only
+        needs to be done once per process - further calls are no-ops.
+
+        This overload does not throw exceptions.
+        \param env A JNI environment handle.
+        \param exc Exception data to populate
+     */
+    void init(JNIEnv *env, ExceptionData &exc) noexcept;
     /**
         Initialises the Java Native Interface with the given JavaVM handle,
         which may be accessible. This (or the other overload) only needs to be
         done once per process - further calls are no-ops.
         \param vm A JNI VM handle.
      */
-    void init(JavaVM* vm);
+    void init(JavaVM *vm) noexcept;
 
     /**
         Get the appropriate JNI environment for this thread.
      */
-    JNIEnv* env();
+    JNIEnv *env(ExceptionData &exc) noexcept;
+
+#ifndef JNIPP_DISABLE_EXCEPTIONS
+    /**
+        Get the appropriate JNI environment for this thread.
+     */
+    JNIEnv *env();
+#endif // !JNIPP_DISABLE_EXCEPTIONS
 
     /**
         Object corresponds with a `java.lang.Object` instance. With an Object,
@@ -497,7 +580,14 @@ namespace jni
             name.
             \param name The qualified class name (e.g. "java/lang/String").
          */
-        Class(const char* name);
+        explicit Class(const char *name);
+
+        /**
+            Obtains a class reference to the Java class with the given qualified
+            name.
+            \param name The qualified class name (e.g. "java/lang/String").
+         */
+        Class(const char *name, ExceptionData& exc) noexcept;
 
         /**
             Creates a Class object by JNI reference.
