@@ -92,6 +92,14 @@ namespace jni
         _vm = vm;
     }
 
+#ifndef JNIPP_DISABLE_EXCEPTIONS
+    void ScopedEnv::init(JavaVM *vm) {
+        ExceptionData exc;
+        this->init(vm, exc);
+        exc.throwException();
+    }
+#endif // !JNIPP_DISABLE_EXCEPTIONS
+
     /*
         Helper Functions
      */
@@ -166,7 +174,7 @@ namespace jni
 
 #endif // _WIN32
 
-    JNIEnv* env()
+    JNIEnv* env(ExceptionData &exc) noexcept
     {
         static thread_local ScopedEnv env;
 
@@ -179,13 +187,23 @@ namespace jni
 
         if (env.get() == nullptr)
         {
-            env.init(javaVm);
+            env.init(javaVm, exc);
         }
 
         return env.get();
     }
 
-    static jclass findClass(const char* name, ExceptionData &exc)
+#ifndef JNIPP_DISABLE_EXCEPTIONS
+    JNIEnv* env()
+    {
+        ExceptionData exc;
+        JNIEnv *ret = env(exc);
+        exc.throwException();
+        return ret;
+    }
+#endif // !JNIPP_DISABLE_EXCEPTIONS
+
+    static jclass findClass(const char* name, ExceptionData &exc) noexcept
     {
         jclass ref = env()->FindClass(name);
 
@@ -197,6 +215,16 @@ namespace jni
 
         return ref;
     }
+
+#ifndef JNIPP_DISABLE_EXCEPTIONS
+    static jclass findClass(const char *name)
+    {
+        ExceptionData exc;
+        jclass ref = findClass(name, exc);
+        exc.throwException();
+        return ref;
+    }
+#endif // !JNIPP_DISABLE_EXCEPTIONS
 
     static void handleJavaExceptions()
     {
@@ -675,6 +703,9 @@ namespace jni
     Class::Class(const char* name) : Object(findClass(name), DeleteLocalInput)
     {
     }
+
+    Class::Class(const char *name, ExceptionData &exc) noexcept
+        : Object(findClass(name, exc), DeleteLocalInput) {}
 
     Class::Class(jclass ref, int scopeFlags) : Object(ref, scopeFlags)
     {

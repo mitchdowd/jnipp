@@ -55,6 +55,7 @@ namespace jni
      */
     typedef unsigned char byte_t;
 
+#ifndef JNIPP_DISABLE_EXCEPTIONS
 #ifdef JNIPP_EXCEPTION_CLASS
 
     /**
@@ -70,6 +71,7 @@ namespace jni
     typedef std::runtime_error Exception;
 
 #endif // JNIPP_EXCEPTION_CLASS
+#endif // !JNIPP_DISABLE_EXCEPTIONS
 
     // Foward Declarations
     class Object;
@@ -117,8 +119,10 @@ namespace jni
         /// Swap with another instance of ExceptionData
         void swap(ExceptionData &other) noexcept;
 
+#ifndef JNIPP_DISABLE_EXCEPTIONS
         /// Throw an Exception subclass based on this data, if set as thrown.
         void throwException();
+#endif // !JNIPP_DISABLE_EXCEPTIONS
 
         /// Get a string from the exception, if any.
         std::string getMessage() const;
@@ -266,13 +270,16 @@ namespace jni
         };
     }
 
+#ifndef JNIPP_DISABLE_EXCEPTIONS
     /**
         Initialises the Java Native Interface with the given JNIEnv handle,
         which gets passed into a native function which is called from Java. This only
         needs to be done once per process - further calls are no-ops.
         \param env A JNI environment handle.
      */
-    void init(JNIEnv* env);
+    void init(JNIEnv *env);
+#endif // !JNIPP_DISABLE_EXCEPTIONS
+
     /**
         Initialises the Java Native Interface with the given JNIEnv handle,
         which gets passed into a native function which is called from Java. This only
@@ -294,7 +301,14 @@ namespace jni
     /**
         Get the appropriate JNI environment for this thread.
      */
-    JNIEnv* env();
+    JNIEnv *env(ExceptionData &exc) noexcept;
+
+#ifndef JNIPP_DISABLE_EXCEPTIONS
+    /**
+        Get the appropriate JNI environment for this thread.
+     */
+    JNIEnv *env();
+#endif // !JNIPP_DISABLE_EXCEPTIONS
 
     /**
         Object corresponds with a `java.lang.Object` instance. With an Object,
@@ -566,7 +580,14 @@ namespace jni
             name.
             \param name The qualified class name (e.g. "java/lang/String").
          */
-        Class(const char* name);
+        explicit Class(const char *name);
+
+        /**
+            Obtains a class reference to the Java class with the given qualified
+            name.
+            \param name The qualified class name (e.g. "java/lang/String").
+         */
+        Class(const char *name, ExceptionData& exc) noexcept;
 
         /**
             Creates a Class object by JNI reference.
