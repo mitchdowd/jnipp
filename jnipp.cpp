@@ -674,8 +674,10 @@ namespace jni
     {
         jfieldID id = env()->GetFieldID(getHandle(), name, signature);
 
-        if (id == nullptr)
+        if (id == nullptr) {
+            env()->ExceptionClear();
             throw NameResolutionException(name);
+        }
 
         return id;
     }
@@ -684,8 +686,10 @@ namespace jni
     {
         jfieldID id = env()->GetStaticFieldID(getHandle(), name, signature);
 
-        if (id == nullptr)
+        if (id == nullptr) {
+            env()->ExceptionClear();
             throw NameResolutionException(name);
+        }
 
         return id;
     }
@@ -694,8 +698,10 @@ namespace jni
     {
         jmethodID id = env()->GetMethodID(getHandle(), name, signature);
 
-        if (id == nullptr)
+        if (id == nullptr) {
+            env()->ExceptionClear();
             throw NameResolutionException(name);
+        }
 
         return id;
     }
@@ -709,8 +715,10 @@ namespace jni
         if (sig != nullptr)
             return getMethod(std::string(nameAndSignature, sig - nameAndSignature).c_str(), sig);
 
-        if (id == nullptr)
+        if (id == nullptr) {
+            env()->ExceptionClear();
             throw NameResolutionException(nameAndSignature);
+        }
 
         return id;
     }
@@ -719,8 +727,10 @@ namespace jni
     {
         jmethodID id = env()->GetStaticMethodID(getHandle(), name, signature);
 
-        if (id == nullptr)
+        if (id == nullptr) {
+            env()->ExceptionClear();
             throw NameResolutionException(name);
+        }
 
         return id;
     }
@@ -733,8 +743,10 @@ namespace jni
         if (sig != nullptr)
             return getStaticMethod(std::string(nameAndSignature, sig - nameAndSignature).c_str(), sig);
 
-        if (id == nullptr)
+        if (id == nullptr) {
+            env()->ExceptionClear();
             throw NameResolutionException(nameAndSignature);
+        }
 
         return id;
     }
