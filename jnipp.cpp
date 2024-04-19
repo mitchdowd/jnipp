@@ -44,6 +44,7 @@ namespace jni
         ScopedEnv() noexcept : _vm(nullptr), _env(nullptr), _attached(false) {}
         ~ScopedEnv();
 
+        // Caution - throws if VM is nullptr!
         void init(JavaVM* vm);
         JNIEnv* get() const noexcept { return _env; }
 
@@ -157,10 +158,16 @@ namespace jni
 
 #endif // _WIN32
 
-    JNIEnv* env()
+    static ScopedEnv &scopedEnvInstance() noexcept
     {
         static thread_local ScopedEnv env;
+        return env;
+    }
 
+    // may return nullptr, beware!
+    JNIEnv *env_noexcept() noexcept
+    {
+        ScopedEnv& env = scopedEnvInstance();
         if (env.get() != nullptr && !isAttached(javaVm))
         {
             // we got detached, so clear it.
@@ -168,12 +175,23 @@ namespace jni
             env = ScopedEnv{};
         }
 
-        if (env.get() == nullptr)
+        if (env.get() == nullptr && javaVm != nullptr)
         {
             env.init(javaVm);
         }
 
         return env.get();
+    }
+
+    JNIEnv* env()
+    {
+        JNIEnv *ret = env_noexcept();
+        if (ret == nullptr)
+        {
+            throw InitializationException("JNI not initialized");
+        }
+
+        return ret;
     }
 
     static jclass findClass(const char* name)
@@ -307,9 +325,14 @@ namespace jni
 
     Object::~Object() noexcept
     {
-        JNIEnv* env = jni::env();
+        JNIEnv* env = jni::env_noexcept();
+        if (env == nullptr)
+        {
+            // Better be empty. Cannot do anything useful.
+            return;
+        }
 
-        if (_isGlobal)
+        if (_isGlobal && _handle != nullptr)
             env->DeleteGlobalRef(_handle);
 
         if (_class != nullptr)
