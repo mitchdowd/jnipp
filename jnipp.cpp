@@ -307,9 +307,15 @@ namespace jni
 
     Object::~Object() noexcept
     {
-        JNIEnv* env = jni::env();
+        JNIEnv* env;
+        try {
+            env = jni::env();
+        } catch (const jni::InitializationException &) {
+            // Better be empty. Cannot do anything useful.
+            return;
+        }
 
-        if (_isGlobal)
+        if (_isGlobal && _handle != nullptr)
             env->DeleteGlobalRef(_handle);
 
         if (_class != nullptr)
