@@ -1,24 +1,22 @@
 name: jnipp
-on:
-  [push]
+on: [push]
 jobs:
   windows:
     name: windows
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         name: Checkout project
-      - uses: actions/setup-java@v1
+      - uses: actions/setup-java@v4
         with:
-          java-version: 1.8
-          java-package: jdk
-          architecture: x64
+          distribution: "temurin"
+          java-version: "8"
       - name: Add msbuild to PATH
-        uses: microsoft/setup-msbuild@v1.0.3
+        uses: microsoft/setup-msbuild@v2
         with:
           vs-version: 16.5
       - name: Build
-        run: msbuild jnipp.sln /p:Platform=X64
+        run: msbuild jnipp.sln /p:Platform=X64 /m
       - name: Test
         run: .\x64\Debug\tests.exe
 
@@ -34,13 +32,12 @@ jobs:
     name: macos
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         name: Checkout project
-      - uses: actions/setup-java@v1
+      - uses: actions/setup-java@v4
         with:
-          java-version: 1.8
-          java-package: jdk
-          architecture: x64
+          distribution: "temurin"
+          java-version: "8"
       - name: Build
         run: make
       - name: Test
@@ -59,13 +56,12 @@ jobs:
     name: ubuntu
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         name: Checkout project
-      - uses: actions/setup-java@v1
+      - uses: actions/setup-java@v4
         with:
-          java-version: 1.8
-          java-package: jdk
-          architecture: x64
+          distribution: "temurin"
+          java-version: "8"
       - name: Build
         run: make
       - name: Test
