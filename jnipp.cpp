@@ -8,6 +8,7 @@
 # include <dlfcn.h>
 # include <unistd.h>
 # include <tuple>
+# include <stdlib.h>
 #endif
 
 // External Dependencies
@@ -665,7 +666,7 @@ namespace jni
         return Class(getClass(), Temporary).getField(name, signature);
     }
 
-    jobject Object::makeLocalReference() const 
+    jobject Object::makeLocalReference() const
     {
         if (isNull())
             return nullptr;
